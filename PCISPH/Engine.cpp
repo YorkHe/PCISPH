@@ -11,7 +11,7 @@ Engine::~Engine()
 {
 }
 
-void Engine::init()
+void Engine::init(Scene* scene)
 {
-	
+	mScene = scene;
 }

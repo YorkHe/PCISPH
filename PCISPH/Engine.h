@@ -1,11 +1,16 @@
 #pragma once
+#include "Scene.h"
+
 class Engine
 {
 public:
 	Engine();
 	~Engine();
 
-	void init();
+	void init(Scene*);
+
+private:
+	Scene* mScene;
 
 };
 
