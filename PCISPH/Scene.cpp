@@ -39,6 +39,7 @@ void Scene::parseFromFile(std::string path)
 	ptree ptConstant = pt.get_child("constant");
 	ptree ptScene = pt.get_child("scene");
 
+	constant.particleNumbers = ptConstant.get<long>("particleNumbers");
 	constant.particleRadius = ptConstant.get<float>("particleRadius");
 	constant.restDensity = ptConstant.get<float>("restDensity");
 	constant.surfaceTension = ptConstant.get<float>("surfaceTension");

@@ -32,7 +32,7 @@ void System::start()
 	{
 		glfwPollEvents();
 
-
+		mEngine->draw();
 
 		glfwSwapBuffers(mWindow->mGLWindow);
 	}

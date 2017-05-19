@@ -12,6 +12,7 @@ public:
 
 	struct _constant
 	{
+		long particleNumbers = 0;
 		float particleRadius = 0.0;
 		float restDensity = 0.0;
 		float surfaceTension = 0.0;
