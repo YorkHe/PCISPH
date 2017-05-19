@@ -121,6 +121,7 @@
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Readme.md" />
     <None Include="config.json" />
     <None Include="packages.config" />
   </ItemGroup>

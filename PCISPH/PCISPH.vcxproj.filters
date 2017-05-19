@@ -36,6 +36,9 @@
     <None Include="config.json">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\Readme.md">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="System.h">
