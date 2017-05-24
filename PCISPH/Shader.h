@@ -10,5 +10,6 @@ public:
 	GLuint program;
 	Shader(const GLchar* vertexPath, const GLchar* fragmentPath);
 	void use();
+	void unUse();
 };
 

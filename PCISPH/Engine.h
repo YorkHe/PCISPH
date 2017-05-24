@@ -23,9 +23,8 @@ public:
 
 private:
 	Scene* mScene;
-	Shader* mShader;
 	Camera* mCamera;
 
-	std::vector<Particle*>* mParticles;
+	Particle* mParticles;
 };
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <gl/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include "Engine.h"
+#include "Types.h"
 
 class Camera
 {

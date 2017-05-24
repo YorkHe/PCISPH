@@ -14,11 +14,11 @@ Engine::~Engine()
 void Engine::init(Scene* scene)
 {
 	mScene = scene;
+	mParticles = new Particle();
+
 	initShaders();
 	loadCamera();
 	initParticles();
-
-
 }
 
 void Engine::initParticles()
@@ -34,7 +34,7 @@ void Engine::initParticles()
 		{
 			for (float z = leftBottom.z; z< rightTop.z; z+=step)
 			{
-				mParticles->push_back(new Particle(x, y, z));
+				mParticles->appendParticle(x, y, z);
 			}
 		}
 	}
@@ -43,7 +43,6 @@ void Engine::initParticles()
 
 void Engine::initShaders()
 {
-	mShader = new Shader();
 }
 
 void Engine::loadCamera()
@@ -59,7 +58,6 @@ void Engine::loadCamera()
 
 void Engine::draw()
 {
-
 	render();
 
 	updateSimulation();
@@ -72,7 +70,7 @@ void Engine::updateSimulation()
 
 void Engine::render()
 {
-	
+	mParticles->draw(mCamera);
 }
 
 

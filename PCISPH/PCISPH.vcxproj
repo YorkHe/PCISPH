@@ -126,6 +126,8 @@
     <None Include="..\Readme.md" />
     <None Include="config.json" />
     <None Include="packages.config" />
+    <None Include="shaders\particle.frag" />
+    <None Include="shaders\particle.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />

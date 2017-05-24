@@ -1,6 +1,6 @@
 {
   "constant": {
-    "particleNumber": 10000, 
+    "particleNumbers": 10000, 
     "particleRadius": 0.01,
     "restDensity": 1000.0,
     "surfaceTension": 1.0,
