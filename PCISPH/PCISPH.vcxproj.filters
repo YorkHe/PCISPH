@@ -1,136 +1,113 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Header Files\Renderer">
-      <UniqueIdentifier>{06e06ee7-a971-42b2-ba07-c02be9e3195a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Simulator">
-      <UniqueIdentifier>{23bd4475-1229-40a1-b166-6a6546579446}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Renderer">
-      <UniqueIdentifier>{cf023e44-21d5-4bb9-92bf-75a04e75c05f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Simulator">
-      <UniqueIdentifier>{399d73bf-bfdd-48ad-ad4e-a872360467a4}</UniqueIdentifier>
-    </Filter>
-<<<<<<< HEAD
-    <Filter Include="Source Files\shaders">
-      <UniqueIdentifier>{8f621ac0-87a1-4931-a78e-eecd0dd2dd6c}</UniqueIdentifier>
-=======
-    <Filter Include="Source Files\Shader">
-      <UniqueIdentifier>{76676562-2f0c-480e-9414-0d47e303a13b}</UniqueIdentifier>
->>>>>>> fbba43c26db5ba5a382c74ee3fd48a0b2e88f57c
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="..\Readme.md">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="ClassDiagram.cd" />
-    <None Include="config.json">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\particle.frag">
-<<<<<<< HEAD
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="shaders\particle.vert">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="shaders\scene.frag">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="shaders\scene.vert">
-      <Filter>Source Files\shaders</Filter>
-=======
-      <Filter>Source Files\Shader</Filter>
-    </None>
-    <None Include="shaders\particle.vert">
-      <Filter>Source Files\Shader</Filter>
-    </None>
-    <None Include="shaders\scene.frag">
-      <Filter>Source Files\Shader</Filter>
-    </None>
-    <None Include="shaders\scene.vert">
-      <Filter>Source Files\Shader</Filter>
->>>>>>> fbba43c26db5ba5a382c74ee3fd48a0b2e88f57c
-    </None>
+    <ClCompile Include="Camera.cpp">
+      <Filter>source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Kernel.cpp">
+      <Filter>source\Simulator</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSet.cpp">
+      <Filter>source\Simulator</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulator.cpp">
+      <Filter>source\Simulator</Filter>
+    </ClCompile>
+    <ClCompile Include="System.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Window.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Kernel.h">
-      <Filter>Header Files\Simulator</Filter>
+      <Filter>include\Simulator</Filter>
     </ClInclude>
     <ClInclude Include="ParticleSet.h">
-      <Filter>Header Files\Simulator</Filter>
-    </ClInclude>
-    <ClInclude Include="Simulator.h">
-      <Filter>Header Files\Simulator</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer.h">
-      <Filter>Header Files\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Shader.h">
-      <Filter>Header Files\Renderer</Filter>
+      <Filter>include\Simulator</Filter>
     </ClInclude>
     <ClInclude Include="Scene.h">
-      <Filter>Header Files</Filter>
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="System.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Shader.h">
+      <Filter>include\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Types.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Renderer.h">
+      <Filter>include\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Header Files</Filter>
+      <Filter>include\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulator.h">
+      <Filter>include\Simulator</Filter>
+    </ClInclude>
+    <ClInclude Include="System.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Kernel.cpp">
-      <Filter>Source Files\Simulator</Filter>
-    </ClCompile>
-    <ClCompile Include="ParticleSet.cpp">
-      <Filter>Source Files\Simulator</Filter>
-    </ClCompile>
-    <ClCompile Include="Simulator.cpp">
-      <Filter>Source Files\Simulator</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer.cpp">
-      <Filter>Source Files\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>Source Files\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="System.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <None Include="..\Readme.md" />
+    <None Include="ClassDiagram.cd" />
+    <None Include="packages.config" />
+    <None Include="config.json">
+      <Filter>config</Filter>
+    </None>
+    <None Include="shaders\particle.frag">
+      <Filter>source\shaders</Filter>
+    </None>
+    <None Include="shaders\particle.vert">
+      <Filter>source\shaders</Filter>
+    </None>
+    <None Include="shaders\scene.frag">
+      <Filter>source\shaders</Filter>
+    </None>
+    <None Include="shaders\scene.vert">
+      <Filter>source\shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{38808289-e6c5-43bd-80a6-e92fddfac53c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{56acae71-ed50-441b-ae54-d3545cbfab3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Simulator">
+      <UniqueIdentifier>{d8d0f7b1-1cf0-4487-ade8-eeea05e6da9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Renderer">
+      <UniqueIdentifier>{25ce901b-6161-4c8a-810b-7aa2f5a7fe66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Renderer">
+      <UniqueIdentifier>{4e99cf43-8113-4f6c-8e8e-730d9bd7b12c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Simulator">
+      <UniqueIdentifier>{47fe9325-776c-4b71-a227-1a09ce03011e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\shaders">
+      <UniqueIdentifier>{bb8d1f5a-c6e7-4e63-9782-f0b451f4a3ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="config">
+      <UniqueIdentifier>{cc85a35a-c1b4-4b1f-8eac-bb715a939306}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
