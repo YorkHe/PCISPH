@@ -25,6 +25,9 @@
     <Filter Include="Source Files\Simulator">
       <UniqueIdentifier>{399d73bf-bfdd-48ad-ad4e-a872360467a4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\shaders">
+      <UniqueIdentifier>{8f621ac0-87a1-4931-a78e-eecd0dd2dd6c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -34,6 +37,18 @@
     <None Include="ClassDiagram.cd" />
     <None Include="config.json">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\particle.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="shaders\particle.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="shaders\scene.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="shaders\scene.vert">
+      <Filter>Source Files\shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -64,6 +79,9 @@
     <ClInclude Include="Types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Kernel.cpp">
@@ -91,6 +109,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
