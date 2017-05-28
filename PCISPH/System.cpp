@@ -1,44 +1,55 @@
 #include "System.h"
-#include <iostream>
 
 
-System::System()
+
+System::System(): scene(nullptr), simulator(new Simulator), window(new Window), renderer(new Renderer)
 {
-	mWindow = new Window;
-	mEngine = new Engine;
-	mScene = new Scene;
 }
 
 
 System::~System()
 {
+	delete this->simulator;
+	//delete this->window;  // Delete window will cause error, because of the ErrorCallback of GLFW
+	delete this->renderer;
 }
 
-void System::init(boost::program_options::variables_map vm)
-{
+void System::init(const std::string &configPath) {
+	try {
+		// Initialize the new scene
+		delete this->scene;
+		this->scene = new Scene(configPath);
 
-	//std::cout << vm["config-file"].as<std::vector<std::string>>()[0];
-	mScene->parseFromFile(vm["config-file"].as<std::vector<std::string>>()[0]);
-
-	// Init the window and engine;
-	mWindow->init();
-	mEngine->init(mScene);
-
-}
-
-void System::start()
-{
-	while (!glfwWindowShouldClose(mWindow->mGLWindow))
-	{
-		glfwPollEvents();
-
-		mEngine->draw();
-
-		glfwSwapBuffers(mWindow->mGLWindow);
+		// Refresh simulator and renderer
+		this->simulator->init(this->scene);
+		this->window->init();
+		this->renderer->init(this->window, this->scene);
+	}
+	catch (std::exception e) {
+		throw e;
 	}
 }
 
-void System::terminate()
-{
+void System::start() {
+	// Set OpenGL States
+	glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_POINT_SMOOTH);
+
+	// Begin drawing
+	while (!glfwWindowShouldClose(window->mGLWindow))
+	{
+		glfwPollEvents();
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		this->simulator->update();
+		this->renderer->draw(this->simulator->getParticlePositions());
+
+		glfwSwapBuffers(window->mGLWindow);
+	}
+}
+
+void System::terminate() {
 	glfwTerminate();
 }

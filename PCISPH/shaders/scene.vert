@@ -1,6 +1,6 @@
 #version 430 core
 
-uniform mat4 mvp; // model, view, projection
+uniform mat4 mvp; // projection * view * model
 
 layout(location = 0) in vec3 position;
 

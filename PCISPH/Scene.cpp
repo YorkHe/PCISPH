@@ -1,13 +1,21 @@
 #include "Scene.h"
 #include <fstream>
+#include <iostream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include "Engine.h"
-#include <iostream>
-
 
 using boost::property_tree::ptree;
 using boost::property_tree::read_json;
+
+Scene::Scene(const std::string &path)
+{
+	this->parseFromFile(path);
+}
+
+
+Scene::~Scene()
+{
+}
 
 template<typename T>
 std::vector<T> as_vector(ptree const& pt, ptree::key_type const& key)
@@ -19,59 +27,58 @@ std::vector<T> as_vector(ptree const& pt, ptree::key_type const& key)
 	return r;
 }
 
-Scene::Scene()
-{
-}
-
-
-Scene::~Scene()
-{
-}
-
-void Scene::parseFromFile(std::string path)
-{
+void Scene::parseFromFile(const std::string &path) {
 	ptree pt;
 	std::fstream fs;
-	fs.open(path, std::fstream::in);
-	read_json(fs, pt);
-	fs.close();
 
-	ptree ptConstant = pt.get_child("constant");
-	ptree ptScene = pt.get_child("scene");
-
-	constant.particleNumbers = ptConstant.get<long>("particleNumbers");
-	constant.particleRadius = ptConstant.get<float>("particleRadius");
-	constant.restDensity = ptConstant.get<float>("restDensity");
-	constant.surfaceTension = ptConstant.get<float>("surfaceTension");
-	constant.viscosity = ptConstant.get<float>("viscosity");
-	constant.timeStep = ptConstant.get<float>("timeStep");
-
-	std::vector<float> gravity = as_vector<float>(ptConstant, "gravity");
-	constant.gravity[0] = gravity[0];
-	constant.gravity[1] = gravity[1];
-	constant.gravity[2] = gravity[2];
-
-	std::vector<float> cameraPosition = as_vector<float>(ptScene, "cameraPosition");
-	std::vector<float> cameraTarget = as_vector<float>(ptScene, "cameraTarget");
-
-	scene.cameraPosition[0] = cameraPosition[0];
-	scene.cameraPosition[1] = cameraPosition[1];
-	scene.cameraPosition[2] = cameraPosition[2];
-
-	scene.cameraTarget[0] = cameraTarget[0];
-	scene.cameraTarget[1] = cameraTarget[1];
-	scene.cameraTarget[2] = cameraTarget[2];
-
-	for (auto &item : ptScene.get_child("worldBounds"))
-	{
-		std::vector<float> f = as_vector<float>(item.second, "");
-		scene.worldBounds.push_back(PCISPH::Vec3(f[0], f[1], f[2]));
+	try {
+		fs.open(path, std::fstream::in);
+		read_json(fs, pt);
+		fs.close();
+	}
+	catch (std::ifstream::failure e) {
+		std::cerr << "Can not open configuration file." << std::endl;
+		throw e;
+		return;
 	}
 
-	for (auto &item : ptScene.get_child("boxBounds"))
+	std::string modeStr = pt.get<std::string>("mode");
+	if (modeStr == "FLOW") {
+		this->mode = FLOW;
+	}
+	else {
+		this->mode = STATIC;
+	}
+	this->particleNumber = pt.get<long>("particleNumber");
+	this->referenceDensity = pt.get<float>("referenceDensity");
+	this->viscosityCoefficient = pt.get<float>("viscosityCoefficient");
+	this->timeStep = pt.get<float>("timeStep");
+	std::vector<float> g = as_vector<float>(pt, "gravity");
+	this->gravity.x = g[0];
+	this->gravity.y = g[1];
+	this->gravity.z = g[2];
+
+	for (auto &item : pt.get_child("boxBounds"))
 	{
 		std::vector<float> f = as_vector<float>(item.second, "");
-		scene.boxBounds.push_back(PCISPH::Vec3(f[0], f[1], f[2]));
+		this->boxBounds.push_back(PCISPH::Vec3(f[0], f[1], f[2]));
 	}
 
+	for (auto &item : pt.get_child("fluidBounds"))
+	{
+		std::vector<float> f = as_vector<float>(item.second, "");
+		this->fluidBounds.push_back(PCISPH::Vec3(f[0], f[1], f[2]));
+	}
+
+	std::cout << "Read Scene" << std::endl;
+	std::cout << "\tmode = " << modeStr << std::endl;
+	std::cout << "\tparticleNumber = " << this->particleNumber << std::endl;
+	std::cout << "\trefernceDensity = " << this->referenceDensity << std::endl;
+	std::cout << "\tviscosityCoefficient = " << this->viscosityCoefficient << std::endl;
+	std::cout << "\ttimeStep = " << this->timeStep << std::endl;
+	std::cout << "\tgravity = [ " << this->gravity.x << ", " << gravity.y << ", " << gravity.z << " ]" << std::endl;
+	std::cout << "\tboxBounds = [ " << this->boxBounds[0].x << ", " << boxBounds[0].y << ", " << boxBounds[0].z << " ] - [ ";
+	std::cout << this->boxBounds[1].x << ", " << boxBounds[1].y << ", " << boxBounds[1].z << " ]" << std::endl;
+	std::cout << "\tfluidBounds = [ " << this->fluidBounds[0].x << ", " << fluidBounds[0].y << ", " << fluidBounds[0].z << " ] - [ ";
+	std::cout << this->fluidBounds[1].x << ", " << fluidBounds[1].y << ", " << fluidBounds[1].z << " ]" << std::endl;
 }

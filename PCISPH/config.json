@@ -1,23 +1,16 @@
 {
-  "constant": {
-    "particleNumbers": 10000, 
-    "particleRadius": 0.01,
-    "restDensity": 1000.0,
-    "surfaceTension": 1.0,
-    "viscosity": 2.0,
+	"mode": "STATIC",
+    "particleNumber": 25,
+    "referenceDensity": 1000.0,
+    "viscosityCoefficient": 2.0,
     "timeStep": 0.001,
-    "gravity": [0, -9.81, 0]
-  },
-  "scene" : {
-    "cameraPosition": [ 2.5, 2.0, 2.0 ],
-    "cameraTarget": [ 0, 0, 0 ],
-    "worldBounds": [
-      [ -0.2, 0.0, -0.2 ],
-      [ 0.2, 0.4, 0.2 ]
-    ],
+    "gravity": [0, -9.81, 0],
     "boxBounds": [
-      [ -0.15, -0.05, -0.15 ],
-      [ 0.15, 0.35, 0.15 ]
+        [ -0.5, -0.5, -0.5 ],
+        [ 0.5, 0.5, 0.5 ]
+    ],
+    "fluidBounds": [
+        [ -0.15, -0.05, -0.15 ],
+        [ 0.15, 0.35, 0.15 ]
     ]
-  } 
 }

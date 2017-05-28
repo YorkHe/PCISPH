@@ -3,17 +3,22 @@
 
 
 
-Window::Window()
+Window::Window():mGLWindow(nullptr)
 {
 }
-
 
 Window::~Window()
 {
+	if (mGLWindow != nullptr) {
+		glfwDestroyWindow(mGLWindow);
+	}
 }
 
-void Window::init()
-{
+void Window::init() {
+
+	if (this->mGLWindow != nullptr) {
+		return;
+	}
 
 	glfwSetErrorCallback([](int error, const char* desc)
 	{
@@ -46,8 +51,7 @@ void Window::init()
 	{
 		throw std::runtime_error("GLEW initalization error");
 	}
-	
-	glViewport(0, 0, WIDTH, HEIGHT);
 
+	glViewport(0, 0, WIDTH, HEIGHT);
 }
 

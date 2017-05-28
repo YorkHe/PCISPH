@@ -32,7 +32,7 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath)
 
 		std::stringstream vShaderStream, fShaderStream;
 		vShaderStream << vShaderFile.rdbuf();
-		fShaderStream << vShaderFile.rdbuf();
+		fShaderStream << fShaderFile.rdbuf();
 
 		vShaderFile.close();
 		fShaderFile.close();

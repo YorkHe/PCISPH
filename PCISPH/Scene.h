@@ -1,40 +1,29 @@
 #pragma once
+
 #include <string>
-#include "Types.h"
 #include <vector>
+#include "Types.h"
 
 class Scene
 {
 public:
-	Scene();
+	Scene(const std::string &path);
 	~Scene();
-	void parseFromFile(std::string path);
 
-	struct _constant
-	{
-		long particleNumbers = 0;
-		float particleRadius = 0.0;
-		float restDensity = 0.0;
-		float surfaceTension = 0.0;
-		float viscosity = 0.0;
-		float timeStep = 0.0;
-		PCISPH::Vec3 gravity;
-	};
+	enum {STATIC, FLOW} mode;
 
-	struct _scene
-	{
-		PCISPH::Vec3 cameraPosition;
-		PCISPH::Vec3 cameraTarget;
-		std::vector<PCISPH::Vec3> worldBounds;
-		std::vector<PCISPH::Vec3> boxBounds;
-	};
+	long particleNumber;
+	//float particleRadius;  // It seems nothing to do with particle's radius
+	float referenceDensity;
+	//float surfaceTension;  //TODO: What is surface tension?
+	float viscosityCoefficient;
+	float timeStep;
+	PCISPH::Vec3 gravity;
 
+	std::vector<PCISPH::Vec3> boxBounds;
+	std::vector<PCISPH::Vec3> fluidBounds;
 
-	_constant constant;
-
-	_scene scene;
-
+private:
+	void parseFromFile(const std::string &path);
 };
-
-
 

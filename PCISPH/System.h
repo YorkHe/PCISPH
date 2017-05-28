@@ -1,8 +1,8 @@
 #pragma once
+
+#include "Renderer.h"
+#include "Simulator.h"
 #include "Scene.h"
-#include "Window.h"
-#include "Engine.h"
-#include <boost/program_options.hpp>
 
 class System
 {
@@ -10,17 +10,14 @@ public:
 	System();
 	~System();
 
-	void init(boost::program_options::variables_map vm);
+	void init(const std::string &configPath);
 	void start();
 	void terminate();
 
 private:
-
-	Scene* mScene;
-
-	Window* mWindow;
-	Engine* mEngine;
-
-
+	Scene *scene;
+	Simulator *simulator;
+	Window *window;
+	Renderer *renderer;
 };
 
