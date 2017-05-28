@@ -25,8 +25,13 @@
     <Filter Include="Source Files\Simulator">
       <UniqueIdentifier>{399d73bf-bfdd-48ad-ad4e-a872360467a4}</UniqueIdentifier>
     </Filter>
+<<<<<<< HEAD
     <Filter Include="Source Files\shaders">
       <UniqueIdentifier>{8f621ac0-87a1-4931-a78e-eecd0dd2dd6c}</UniqueIdentifier>
+=======
+    <Filter Include="Source Files\Shader">
+      <UniqueIdentifier>{76676562-2f0c-480e-9414-0d47e303a13b}</UniqueIdentifier>
+>>>>>>> fbba43c26db5ba5a382c74ee3fd48a0b2e88f57c
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -39,6 +44,7 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\particle.frag">
+<<<<<<< HEAD
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="shaders\particle.vert">
@@ -49,6 +55,18 @@
     </None>
     <None Include="shaders\scene.vert">
       <Filter>Source Files\shaders</Filter>
+=======
+      <Filter>Source Files\Shader</Filter>
+    </None>
+    <None Include="shaders\particle.vert">
+      <Filter>Source Files\Shader</Filter>
+    </None>
+    <None Include="shaders\scene.frag">
+      <Filter>Source Files\Shader</Filter>
+    </None>
+    <None Include="shaders\scene.vert">
+      <Filter>Source Files\Shader</Filter>
+>>>>>>> fbba43c26db5ba5a382c74ee3fd48a0b2e88f57c
     </None>
   </ItemGroup>
   <ItemGroup>
