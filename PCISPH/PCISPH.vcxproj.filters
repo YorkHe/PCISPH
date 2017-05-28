@@ -25,6 +25,9 @@
     <Filter Include="Source Files\Simulator">
       <UniqueIdentifier>{399d73bf-bfdd-48ad-ad4e-a872360467a4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Shader">
+      <UniqueIdentifier>{76676562-2f0c-480e-9414-0d47e303a13b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -34,6 +37,18 @@
     <None Include="ClassDiagram.cd" />
     <None Include="config.json">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\particle.frag">
+      <Filter>Source Files\Shader</Filter>
+    </None>
+    <None Include="shaders\particle.vert">
+      <Filter>Source Files\Shader</Filter>
+    </None>
+    <None Include="shaders\scene.frag">
+      <Filter>Source Files\Shader</Filter>
+    </None>
+    <None Include="shaders\scene.vert">
+      <Filter>Source Files\Shader</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

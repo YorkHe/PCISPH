@@ -124,6 +124,10 @@
     <None Include="ClassDiagram.cd" />
     <None Include="config.json" />
     <None Include="packages.config" />
+    <None Include="shaders\particle.frag" />
+    <None Include="shaders\particle.vert" />
+    <None Include="shaders\scene.frag" />
+    <None Include="shaders\scene.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Kernel.h" />
