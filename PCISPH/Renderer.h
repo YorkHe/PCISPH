@@ -5,6 +5,7 @@
 #include "Scene.h"
 #include "Types.h"
 #include "Camera.h"
+#include "ParticleSet.h"
 
 class Renderer
 {
@@ -14,7 +15,7 @@ public:
 
 	void init(Window *window, const Scene *scene);
 
-	void draw(const std::vector<PCISPH::Vec3> &points);
+	void draw(const ParticleSet &particleSet);
 
 private:
 	Window *window;

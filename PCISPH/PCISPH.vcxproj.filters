@@ -31,6 +31,9 @@
     <ClCompile Include="Window.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="Grid.cpp">
+      <Filter>source\Simulator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Kernel.h">
@@ -62,6 +65,9 @@
     </ClInclude>
     <ClInclude Include="Window.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid.h">
+      <Filter>include\Simulator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

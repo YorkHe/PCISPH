@@ -15,8 +15,8 @@ Renderer::~Renderer()
 void Renderer::init(Window *window, const Scene *scene) {
 	this->window = window;
 	this->scene = scene;
-	this->particleShader = Shader("shaders/particle.vert", "shader/particle.frag");
-	this->sceneShader = Shader("shaders/scene.vert", "shader/scene.frag");
+	this->particleShader = Shader("shaders/particle.vert", "shaders/particle.frag");
+	this->sceneShader = Shader("shaders/scene.vert", "shaders/scene.frag");
 
 	// codes below are just for test
 	glGenVertexArrays(1, &(this->sceneVAO));
@@ -25,8 +25,8 @@ void Renderer::init(Window *window, const Scene *scene) {
 }
 
 void Renderer::initSceneVAO() {
-	PCISPH::Vec3 worldP1 = this->scene->boxBounds[0];
-	PCISPH::Vec3 worldP2 = this->scene->boxBounds[1];
+	PCISPH::Vec3 worldP1(0, 0, 0);
+	PCISPH::Vec3 worldP2 = this->scene->boxSize;
 
 	GLfloat vertices[]{
 		worldP1.x, worldP1.y, worldP1.z,
@@ -86,11 +86,15 @@ void Renderer::initParticleVAO(const std::vector<PCISPH::Vec3> &points) {
 	glDeleteBuffers(1, &VBO);
 }
 
-void Renderer::draw(const std::vector<PCISPH::Vec3> &points) {
+void Renderer::draw(const ParticleSet &particleSet) {
 	// TODO: Draw the scene and particles
 
 	// The codes below are just for test
-	glm::mat4 mvp = camera.getProjViewMatrix();
+	glm::mat4 model;
+	model = glm::translate(model, glm::vec3(-0.25f, -0.25f, -0.25f));
+	model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
+
+	glm::mat4 mvp = camera.getProjViewMatrix() * model;
 
 	sceneShader.use();
 	glUniformMatrix4fv(glGetUniformLocation(sceneShader.program, "mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
@@ -99,12 +103,12 @@ void Renderer::draw(const std::vector<PCISPH::Vec3> &points) {
 	glBindVertexArray(0);
 	sceneShader.unUse();
 
-	initParticleVAO(points);
+	initParticleVAO(particleSet.position);
 	particleShader.use();
 	glPointSize(2);
 	glUniformMatrix4fv(glGetUniformLocation(particleShader.program, "mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
 	glBindVertexArray(this->particleVAO);
-	glDrawArrays(GL_POINTS, 0, (GLsizei)points.size());
+	glDrawArrays(GL_POINTS, 0, (GLsizei)particleSet.count);
 	glBindVertexArray(0);
 	particleShader.unUse();
 }
