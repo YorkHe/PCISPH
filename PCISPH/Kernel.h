@@ -5,10 +5,9 @@
 class Kernel {
 public:
 	Kernel();
-	Kernel(float h);
 	~Kernel();
 
-	void setSmoothLength(const float h);
+	void init(const float h);
 
 	/*
 	* Smooth kernels
@@ -16,7 +15,7 @@ public:
 	*/
 
 	// Poly6 kernel is used to interpolate density
-	inline float poly6Kernel(const PCISPH::Vec3 &r);
+	float poly6Kernel(const PCISPH::Vec3 &r);
 	inline PCISPH::Vec3 poly6KernelGradient(const PCISPH::Vec3 &r);
 	inline float poly6KernelLaplacian(const PCISPH::Vec3 &r);
 
@@ -30,7 +29,10 @@ public:
 
 private:
 	float h;
+public:
+	const float &H;
 
+private:
 	float h2;
 	float h6;
 	float h9;

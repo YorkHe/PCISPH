@@ -1,16 +1,16 @@
 {
-  "mode": "STATIC",
-  "particleNumber": 25,
-  "referenceDensity": 1000.0,
-  "viscosityCoefficient": 2.0,
-  "timeStep": 0.001,
-  "gravity": [ 0, -9.81, 0 ],
-  "boxBounds": [
-    [ -0.5, -0.5, -0.5 ],
-    [ 0.5, 0.5, 0.5 ]
-  ],
-  "fluidBounds": [
-    [ -0.25, -0.05, -0.15 ],
-    [ 0.15, 0.35, 0.15 ]
-  ]
+	"mode": "STATIC",
+    "particleNumber": 25,
+    "referenceDensity": 1000.0,
+    "viscosityCoefficient": 2.0,
+    "timeStep": 0.001,
+    "gravity": [0, -9.81, 0],
+    "boxBounds": [
+        [ -0.5, -0.5, -0.5 ],
+        [ 0.5, 0.5, 0.5 ]
+    ],
+    "fluidBounds": [
+        [ -0.15, -0.05, -0.15 ],
+        [ 0.15, 0.35, 0.15 ]
+    ]
 }
