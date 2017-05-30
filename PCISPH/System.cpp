@@ -44,7 +44,7 @@ void System::start() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		this->simulator->update();
-		this->renderer->draw(this->simulator->getParticlePositions());
+		this->renderer->draw(this->simulator->getParticleSet());
 
 		glfwSwapBuffers(window->mGLWindow);
 	}

@@ -49,36 +49,38 @@ void Scene::parseFromFile(const std::string &path) {
 	else {
 		this->mode = STATIC;
 	}
-	this->particleNumber = pt.get<long>("particleNumber");
+	//this->particleNumber = pt.get<long>("particleNumber");
 	this->referenceDensity = pt.get<float>("referenceDensity");
 	this->viscosityCoefficient = pt.get<float>("viscosityCoefficient");
 	this->timeStep = pt.get<float>("timeStep");
+	this->particleRadius = pt.get<float>("particleRadius");
 	std::vector<float> g = as_vector<float>(pt, "gravity");
 	this->gravity.x = g[0];
 	this->gravity.y = g[1];
 	this->gravity.z = g[2];
 
-	for (auto &item : pt.get_child("boxBounds"))
-	{
-		std::vector<float> f = as_vector<float>(item.second, "");
-		this->boxBounds.push_back(PCISPH::Vec3(f[0], f[1], f[2]));
-	}
+	std::vector<float> bSize = as_vector<float>(pt, "boxSize");
+	this->boxSize.x = bSize[0];
+	this->boxSize.y = bSize[1];
+	this->boxSize.z = bSize[2];
 
-	for (auto &item : pt.get_child("fluidBounds"))
-	{
-		std::vector<float> f = as_vector<float>(item.second, "");
-		this->fluidBounds.push_back(PCISPH::Vec3(f[0], f[1], f[2]));
-	}
+	std::vector<float> fSize = as_vector<float>(pt, "fluidSize");
+	this->fluidSize.x = fSize[0];
+	this->fluidSize.y = fSize[1];
+	this->fluidSize.z = fSize[2];
+
+	std::vector<float> fPos = as_vector<float>(pt, "fluidPosition");
+	this->fluidPosition.x = fPos[0];
+	this->fluidPosition.y = fPos[1];
+	this->fluidPosition.z = fPos[2];
 
 	std::cout << "Read Scene" << std::endl;
 	std::cout << "\tmode = " << modeStr << std::endl;
-	std::cout << "\tparticleNumber = " << this->particleNumber << std::endl;
 	std::cout << "\trefernceDensity = " << this->referenceDensity << std::endl;
 	std::cout << "\tviscosityCoefficient = " << this->viscosityCoefficient << std::endl;
 	std::cout << "\ttimeStep = " << this->timeStep << std::endl;
 	std::cout << "\tgravity = [ " << this->gravity.x << ", " << gravity.y << ", " << gravity.z << " ]" << std::endl;
-	std::cout << "\tboxBounds = [ " << this->boxBounds[0].x << ", " << boxBounds[0].y << ", " << boxBounds[0].z << " ] - [ ";
-	std::cout << this->boxBounds[1].x << ", " << boxBounds[1].y << ", " << boxBounds[1].z << " ]" << std::endl;
-	std::cout << "\tfluidBounds = [ " << this->fluidBounds[0].x << ", " << fluidBounds[0].y << ", " << fluidBounds[0].z << " ] - [ ";
-	std::cout << this->fluidBounds[1].x << ", " << fluidBounds[1].y << ", " << fluidBounds[1].z << " ]" << std::endl;
+	std::cout << "\tboxSize = [ " << this->boxSize.x << ", " << boxSize.y << ", " << boxSize.z << " ]" << std::endl;
+	std::cout << "\tfluidSize = [ " << this->fluidSize.x << ", " << fluidSize.y << ", " << fluidSize.z << " ]" << std::endl;
+	std::cout << "\tfluidPosition = [ " << this->fluidPosition.x << ", " << fluidPosition.y << ", " << fluidPosition.z << " ]" << std::endl;
 }

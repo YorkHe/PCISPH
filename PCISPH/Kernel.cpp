@@ -1,26 +1,18 @@
 #include "Kernel.h"
 #include <cmath>
 
-const float PI = 3.1415926;
+const float PI = 3.1415926f;
 
-Kernel::Kernel() {
-	const float defaultH = 3.0f; // TODO: 3.0f is just a test value
-	setSmoothLength(defaultH);
-	initFactors();
-}
-
-Kernel::Kernel(float h) {
-	setSmoothLength(h);
-	initFactors();
-}
+Kernel::Kernel() :h(0), H(this->h) {}
 
 Kernel::~Kernel() {}
 
-void Kernel::setSmoothLength(const float h) {
+void Kernel::init(const float h) {
 	this->h = h;
 	this->h2 = h * h;
 	this->h6 = this->h2 * this->h2 * this->h2;
 	this->h9 = h * this->h2 * this->h6;
+	initFactors();
 }
 
 void Kernel::initFactors() {
@@ -33,7 +25,7 @@ void Kernel::initFactors() {
 	this->viscosityLapFactor = 45.f / (PI * this->h6);
 }
 
-inline float Kernel::poly6Kernel(const PCISPH::Vec3 &r) {
+float Kernel::poly6Kernel(const PCISPH::Vec3 &r) {
 	float rNorm = this->normalize(r);
 	if (rNorm <= this->h) {
 		float val = this->h2 - rNorm * rNorm;
@@ -59,7 +51,7 @@ inline float Kernel::poly6KernelLaplacian(const PCISPH::Vec3 &r) {
 	float rNorm = this->normalize(r);
 	if (rNorm <= this->h) {
 		float val = this->h2 - rNorm * rNorm;
-		return this->poly6LapFactor * val * val * (rNorm * rNorm - 0.75 * val);
+		return this->poly6LapFactor * val * val * (rNorm * rNorm - 0.75f * val);
 	}
 	else {
 		return 0;
