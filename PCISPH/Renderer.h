@@ -13,7 +13,6 @@ public:
 	~Renderer();
 
 	void init(Window *window, const Scene *scene);
-
 	void draw(const std::vector<PCISPH::Vec3> &points);
 
 private:
@@ -29,5 +28,7 @@ private:
 	GLuint particleVAO;
 	void initSceneVAO();
 	void initParticleVAO(const std::vector<PCISPH::Vec3> &points);
+	void drawIndividualParticle(const std::vector<PCISPH::Vec3> &points);
+	void drawMesh(const std::vector<PCISPH::Vec3> &points);
 };
 

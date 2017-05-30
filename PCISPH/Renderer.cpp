@@ -15,13 +15,17 @@ Renderer::~Renderer()
 void Renderer::init(Window *window, const Scene *scene) {
 	this->window = window;
 	this->scene = scene;
-	this->particleShader = Shader("shaders/particle.vert", "shader/particle.frag");
-	this->sceneShader = Shader("shaders/scene.vert", "shader/scene.frag");
+	this->particleShader = Shader("shaders/particle.vert", "shaders/particle.frag");
+	this->sceneShader = Shader("shaders/scene.vert", "shaders/scene.frag");
 
 	// codes below are just for test
 	glGenVertexArrays(1, &(this->sceneVAO));
 	glGenVertexArrays(1, &(this->particleVAO));
 	this->initSceneVAO();
+	glEnable(GL_POINT_SMOOTH);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 }
 
 void Renderer::initSceneVAO() {
@@ -46,11 +50,11 @@ void Renderer::initSceneVAO() {
 		3, 0,
 		0, 4,
 		1, 5,
-		2, 6,
+//		2, 6,
 		3, 7,
 		4, 5,
-		5, 6,
-		6, 7,
+//		5, 6,
+//		6, 7,
 		7, 4
 	};
 
@@ -86,7 +90,9 @@ void Renderer::initParticleVAO(const std::vector<PCISPH::Vec3> &points) {
 	glDeleteBuffers(1, &VBO);
 }
 
-void Renderer::draw(const std::vector<PCISPH::Vec3> &points) {
+
+void Renderer::drawIndividualParticle(const std::vector<PCISPH::Vec3> &points)
+{
 	// TODO: Draw the scene and particles
 
 	// The codes below are just for test
@@ -95,16 +101,33 @@ void Renderer::draw(const std::vector<PCISPH::Vec3> &points) {
 	sceneShader.use();
 	glUniformMatrix4fv(glGetUniformLocation(sceneShader.program, "mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
 	glBindVertexArray(this->sceneVAO);
+	glLineWidth(5.0);
 	glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, (GLvoid*)0);
 	glBindVertexArray(0);
 	sceneShader.unUse();
 
+
 	initParticleVAO(points);
 	particleShader.use();
-	glPointSize(2);
+	glPointSize(10);
+	glUniform3fv(glGetUniformLocation(particleShader.program, "lightDir"), 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f)));
 	glUniformMatrix4fv(glGetUniformLocation(particleShader.program, "mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
 	glBindVertexArray(this->particleVAO);
 	glDrawArrays(GL_POINTS, 0, (GLsizei)points.size());
 	glBindVertexArray(0);
 	particleShader.unUse();
+
+}
+
+void Renderer::drawMesh(const std::vector<PCISPH::Vec3> &points)
+{
+	
+}
+
+void Renderer::draw(const std::vector<PCISPH::Vec3> &points) 
+{
+
+	drawIndividualParticle(points);
+
+	drawMesh(points);
 }

@@ -2,7 +2,6 @@
 #include <stdexcept>
 
 
-
 Window::Window():mGLWindow(nullptr)
 {
 }
@@ -36,6 +35,7 @@ void Window::init() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
+
 	mGLWindow = glfwCreateWindow(WIDTH, HEIGHT, "PCISPH", nullptr, nullptr);
 
 	if (!mGLWindow)
@@ -49,7 +49,7 @@ void Window::init() {
 
 	if (glewInit() != GLEW_OK)
 	{
-		throw std::runtime_error("GLEW initalization error");
+		throw std::runtime_error("GLEW initialization error");
 	}
 
 	glViewport(0, 0, WIDTH, HEIGHT);
