@@ -34,6 +34,12 @@
     <ClCompile Include="Grid.cpp">
       <Filter>source\Simulator</Filter>
     </ClCompile>
+    <ClCompile Include="OctTree.cpp">
+      <Filter>source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="MarchingCube.cpp">
+      <Filter>source\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Kernel.h">
@@ -68,6 +74,12 @@
     </ClInclude>
     <ClInclude Include="Grid.h">
       <Filter>include\Simulator</Filter>
+    </ClInclude>
+    <ClInclude Include="MarchingCube.h">
+      <Filter>include\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="OctTree.h">
+      <Filter>include\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -134,6 +134,8 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Grid.h" />
     <ClInclude Include="Kernel.h" />
+    <ClInclude Include="MarchingCube.h" />
+    <ClInclude Include="OctTree.h" />
     <ClInclude Include="ParticleSet.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />
@@ -148,6 +150,8 @@
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="Kernel.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MarchingCube.cpp" />
+    <ClCompile Include="OctTree.cpp" />
     <ClCompile Include="ParticleSet.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
