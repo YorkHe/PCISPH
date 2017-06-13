@@ -78,9 +78,7 @@
     <ClInclude Include="OctTree.h">
       <Filter>include\Renderer</Filter>
     </ClInclude>
-	<ClInclude Include="utils.h">
-      <Filter>include</Filter>
-    </ClInclude>
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Readme.md" />

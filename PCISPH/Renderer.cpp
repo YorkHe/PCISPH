@@ -118,11 +118,11 @@ void Renderer::draw(const ParticleSet& particleSet)
 	mvp = camera.getProjViewMatrix() * model;
 
 	mParticleSet = &particleSet;
-	marchingCube->updateParticles(&particleSet);
+	//marchingCube->updateParticles(&particleSet);
 	drawScene();
 
-	//drawParticle();
-	drawMesh();
+	drawParticle();
+	//drawMesh();
 }
 
 void Renderer::drawMesh()
