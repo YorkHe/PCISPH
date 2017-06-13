@@ -1,4 +1,3 @@
-#include <gl/glew.h>
 
 #include "System.h"
 #include <windows.h>

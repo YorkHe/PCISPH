@@ -1,5 +1,6 @@
 #include "Renderer.h"
 
+#include <gl/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 
 Renderer::Renderer():window(nullptr), scene(nullptr), camera(), marchingCube(nullptr)

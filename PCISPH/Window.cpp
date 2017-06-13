@@ -21,7 +21,7 @@ void Window::init() {
 
 	glfwSetErrorCallback([](int error, const char* desc)
 	{
-		throw std::runtime_error(desc);
+		throw std::runtime_error(std::string("glfwError ") + desc);
 	});
 
 	if (glfwInit() != GL_TRUE)
