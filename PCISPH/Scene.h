@@ -12,17 +12,21 @@ public:
 
 	enum {STATIC, FLOW} mode;
 
-	//long particleNumber;
-	//float particleRadius;  // It seems nothing to do with particle's radius
 	float referenceDensity;
-	//float surfaceTension;  //TODO: What is surface tension?
-	float viscosityCoefficient;
-	float timeStep;
 	float particleRadius;
+	float viscosityCoefficient;
+	float surfaceTensionCoefficient;
+	float gasStiffness;
+	size_t kernelParticles;
+
+	float timeStep;
+
+	float restitution;
 	PCISPH::Vec3 gravity;
 	PCISPH::Vec3 boxSize;
 	PCISPH::Vec3 fluidSize;
 	PCISPH::Vec3 fluidPosition;
+	PCISPH::Vec3 initVelocity;
 
 private:
 	void parseFromFile(const std::string &path);

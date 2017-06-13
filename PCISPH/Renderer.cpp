@@ -92,7 +92,7 @@ void Renderer::draw(const ParticleSet &particleSet) {
 	// The codes below are just for test
 	glm::mat4 model;
 	model = glm::translate(model, glm::vec3(-0.25f, -0.25f, -0.25f));
-	model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
+	model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	glm::mat4 mvp = camera.getProjViewMatrix() * model;
 

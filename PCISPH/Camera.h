@@ -9,8 +9,8 @@ public:
 	Camera();
 	~Camera();
 
-	PCISPH::Vec3 Position = PCISPH::Vec3(1.0f, 1.0f, 1.0f); // test value
-	PCISPH::Vec3 Front = PCISPH::Vec3(-1.0f, -1.0f, -1.0f);
+	PCISPH::Vec3 Position = PCISPH::Vec3(0.0f, 0.0f, 0.8f); // test value
+	PCISPH::Vec3 Front = -Position;
 	PCISPH::Vec3 Up = PCISPH::Vec3(0.0f, 1.0f, 0.0f);
 
 	glm::mat4 getProjViewMatrix() {

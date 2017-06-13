@@ -2,6 +2,7 @@
 
 #include "Types.h"
 #include <vector>
+#include <functional>
 
 class Grid
 {
@@ -9,26 +10,21 @@ public:
 	Grid();
 	~Grid();
 
-	typedef std::vector<size_t> GridUnit;
-	typedef std::vector<GridUnit> GridUnitSet;
-
-	void init(const PCISPH::Vec3 boxSize, float unitSize);
-	const PCISPH::iVec3 getSize() const { return size; }
-	const float getUnitSize() const { return unitSize; }
-	GridUnit& getGridUnit(const PCISPH::iVec3 gridPos);
-
-	void insert(const PCISPH::Vec3 pos, size_t index);
-	void getNeighborGridUnits(const PCISPH::iVec3 gridPos, GridUnitSet &neighbors) const;
-	//void getNeighbors(const PCISPH::Vec3 pos, std::vector<size_t> &neighbors) const;
-	void move(const PCISPH::Vec3 oldPos, const PCISPH::Vec3 newPos, const size_t index);
+	void init(const PCISPH::Vec3 boxSize, float cellSize);
+	void update(const std::vector<PCISPH::Vec3> &positions, std::function<void(size_t, size_t)> swap);
+	
+	//template<typename Func>
+	void query(const PCISPH::Vec3 &pos, std::function<void(size_t)> func) const;
 
 private:
-	PCISPH::iVec3 size;
-	float unitSize;
+	float cellSize;
 	PCISPH::Vec3 boxSize;
-	GridUnitSet grid;
+	PCISPH::uVec3 gridSize;
+	size_t cellNumber;
+	std::vector<size_t> offset;
 
-	PCISPH::iVec3 getGridPos(const PCISPH::Vec3 &pos) const;
-	size_t getGridIndex(const PCISPH::iVec3 &pos) const;
+	PCISPH::uVec3 getGridPos(const PCISPH::Vec3 &pos) const;
+	size_t linearIndex(const PCISPH::Vec3 &pos) const;
+	size_t linearIndex(const PCISPH::uVec3 &gridPos) const;
 };
 

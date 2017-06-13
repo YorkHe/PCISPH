@@ -4,9 +4,6 @@
     <ClCompile Include="Camera.cpp">
       <Filter>source\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Kernel.cpp">
-      <Filter>source\Simulator</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -68,6 +65,9 @@
     </ClInclude>
     <ClInclude Include="Grid.h">
       <Filter>include\Simulator</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -141,12 +141,12 @@
     <ClInclude Include="Simulator.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="Types.h" />
+    <ClInclude Include="utils.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Grid.cpp" />
-    <ClCompile Include="Kernel.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ParticleSet.cpp" />
     <ClCompile Include="Renderer.cpp" />

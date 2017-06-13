@@ -49,11 +49,17 @@ void Scene::parseFromFile(const std::string &path) {
 	else {
 		this->mode = STATIC;
 	}
-	//this->particleNumber = pt.get<long>("particleNumber");
+
 	this->referenceDensity = pt.get<float>("referenceDensity");
-	this->viscosityCoefficient = pt.get<float>("viscosityCoefficient");
-	this->timeStep = pt.get<float>("timeStep");
 	this->particleRadius = pt.get<float>("particleRadius");
+	this->viscosityCoefficient = pt.get<float>("viscosityCoefficient");
+	this->surfaceTensionCoefficient = pt.get<float>("surfaceTensionCoefficient");
+	this->gasStiffness = pt.get<float>("gasStiffness");
+	this->kernelParticles = pt.get<size_t>("kernelParticles");
+
+	this->timeStep = pt.get<float>("timeStep");
+
+	this->restitution = pt.get<float>("restitution");
 	std::vector<float> g = as_vector<float>(pt, "gravity");
 	this->gravity.x = g[0];
 	this->gravity.y = g[1];
@@ -74,13 +80,26 @@ void Scene::parseFromFile(const std::string &path) {
 	this->fluidPosition.y = fPos[1];
 	this->fluidPosition.z = fPos[2];
 
+	std::vector<float> initV = as_vector<float>(pt, "initVelocity");
+	this->initVelocity.x = initV[0];
+	this->initVelocity.y = initV[1];
+	this->initVelocity.z = initV[2];
+
 	std::cout << "Read Scene" << std::endl;
-	std::cout << "\tmode = " << modeStr << std::endl;
-	std::cout << "\trefernceDensity = " << this->referenceDensity << std::endl;
-	std::cout << "\tviscosityCoefficient = " << this->viscosityCoefficient << std::endl;
-	std::cout << "\ttimeStep = " << this->timeStep << std::endl;
-	std::cout << "\tgravity = [ " << this->gravity.x << ", " << gravity.y << ", " << gravity.z << " ]" << std::endl;
-	std::cout << "\tboxSize = [ " << this->boxSize.x << ", " << boxSize.y << ", " << boxSize.z << " ]" << std::endl;
-	std::cout << "\tfluidSize = [ " << this->fluidSize.x << ", " << fluidSize.y << ", " << fluidSize.z << " ]" << std::endl;
-	std::cout << "\tfluidPosition = [ " << this->fluidPosition.x << ", " << fluidPosition.y << ", " << fluidPosition.z << " ]" << std::endl;
+	std::cout << "\t mode = " << modeStr << std::endl;
+	std::cout << "\t refernceDensity = " << this->referenceDensity << std::endl;
+	std::cout << "\t particleRadius = " << this->particleRadius << std::endl;
+	std::cout << "\t viscosityCoefficient = " << this->viscosityCoefficient << std::endl;
+	std::cout << "\t surfaceTensionCoefficient = " << this->surfaceTensionCoefficient << std::endl;
+	std::cout << "\t gasStiffness = " << this->gasStiffness << std::endl;
+	std::cout << "\t kernelParticles = " << this->kernelParticles << std::endl;
+
+	std::cout << "\t timeStep = " << this->timeStep << std::endl;
+
+	std::cout << "\t restitution = " << this->restitution << std::endl;
+	std::cout << "\t gravity = [ " << this->gravity.x << ", " << gravity.y << ", " << gravity.z << " ]" << std::endl;
+	std::cout << "\t boxSize = [ " << this->boxSize.x << ", " << boxSize.y << ", " << boxSize.z << " ]" << std::endl;
+	std::cout << "\t fluidSize = [ " << this->fluidSize.x << ", " << fluidSize.y << ", " << fluidSize.z << " ]" << std::endl;
+	std::cout << "\t fluidPosition = [ " << this->fluidPosition.x << ", " << fluidPosition.y << ", " << fluidPosition.z << " ]" << std::endl;
+	std::cout << "\t initVelocity = [ " << this->initVelocity.x << ", " << initVelocity.y << ", " << initVelocity.z << " ]" << std::endl;
 }
