@@ -17,26 +17,38 @@ void ParticleSet::init(const float particleMass) {
 	this->particleMass = particleMass;
 
 	this->position.clear();
-	this->velosity.clear();
+	this->predictPosition.clear();
+
+	this->velocity.clear();
+	this->predictVelocity.clear();
+
+	this->normal.clear();
 	this->forces.clear();
 	this->pressureForce.clear();
+
 	this->density.clear();
 	this->pressure.clear();
 
-	this->position.resize(0);
-	this->velosity.resize(0);
-	this->forces.resize(0);
-	this->pressureForce.resize(0);
-	this->density.resize(0);
-	this->pressure.resize(0);
+	this->maxDensityErr = 0.f;
 }
 
-void ParticleSet::addParticle(const Particle &particle) {
-	this->position.push_back(particle.position);
-	this->velosity.push_back(particle. velosity);
-	this->forces.push_back(particle.forces);
-	this->pressureForce.push_back(particle.pressureForce);
-	this->density.push_back(particle.density);
-	this->pressure.push_back(particle.pressure);
+void ParticleSet::addParticle(
+	const PCISPH::Vec3 &p,
+	const PCISPH::Vec3 &v
+) {
+
+	this->position.push_back(p);
+	this->predictPosition.push_back(PCISPH::Vec3(0.f));
+
+	this->velocity.push_back(v);
+	this->predictVelocity.push_back(PCISPH::Vec3(0.f));
+
+	this->normal.push_back(PCISPH::Vec3(0.f));
+	this->forces.push_back(PCISPH::Vec3(0.f));
+	this->pressureForce.push_back(PCISPH::Vec3(0.f));
+
+	this->density.push_back(0.f);
+	this->pressure.push_back(0.f);
+
 	this->count += 1;
 }

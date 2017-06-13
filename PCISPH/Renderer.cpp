@@ -113,7 +113,7 @@ void Renderer::draw(const ParticleSet& particleSet)
 {
 	glm::mat4 model;
 	model = glm::translate(model, glm::vec3(-0.25f, -0.25f, -0.25f));
-	model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
+	model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	mvp = camera.getProjViewMatrix() * model;
 

@@ -1,72 +1,105 @@
 #include "Grid.h"
+#include "utils.h"
+#include <algorithm>
+#include <iostream>
 
+Grid::Grid() :cellSize(), offset() {
 
-
-Grid::Grid()
-{
 }
 
+Grid::~Grid() {
 
-Grid::~Grid()
-{
 }
 
-void Grid::init(const PCISPH::Vec3 boxSize, float unitSize) {
+void Grid::init(const PCISPH::Vec3 boxSize, float cellSize) {
+	this->cellSize = cellSize;
 	this->boxSize = boxSize;
-	this->unitSize = unitSize;
 
-	grid.clear();
+	this->gridSize = PCISPH::iVec3(
+		(int)floor(boxSize.x / cellSize) + 1,
+		(int)floor(boxSize.y / cellSize) + 1,
+		(int)floor(boxSize.z / cellSize) + 1
+	);
+	cellNumber = gridSize.x * gridSize.y * gridSize.z;
 
-	int gridNumx = ceil(boxSize.x / unitSize);
-	int gridNumy = ceil(boxSize.y / unitSize);
-	int gridNumz = ceil(boxSize.z / unitSize);
-	this->size = PCISPH::iVec3(gridNumx, gridNumy, gridNumz);
-
-	grid.resize(gridNumx * gridNumy * gridNumz);
+	offset.resize(cellNumber + 1);
 }
 
-Grid::GridUnit& Grid::getGridUnit(const PCISPH::iVec3 gridPos) {
-	return this->grid[this->getGridIndex(gridPos)];
-}
+void Grid::update(const std::vector<PCISPH::Vec3> &positions, std::function<void(size_t, size_t)> swap) {
+	// particle count in each grid cell
+	std::vector<size_t> cellCount(cellNumber, 0);
+	// pointer to particle array index
+	std::vector<size_t> cellIndex(cellNumber, 0);
 
-void Grid::insert(const PCISPH::Vec3 pos, size_t index) {
-	PCISPH::iVec3 gridPos = this->getGridPos(pos);
-	size_t gridIndex = this->getGridIndex(gridPos);
-	this->grid[gridIndex].push_back(index);
-}
+	size_t particleNumber = positions.size();
+	// grid indices for each particle
+	std::vector<size_t> indices(particleNumber);
 
-void Grid::getNeighborGridUnits(const PCISPH::iVec3 gridPos, Grid::GridUnitSet &neighbors) const {
-	neighbors.clear();
-	for (int dx = -1; dx <= 1; dx++) {
-		if (gridPos.x + dx < 0 || gridPos.x + dx >= size.x) {
-			continue;
+	for (size_t i = 0; i < particleNumber; i++) {
+		size_t index = linearIndex(positions[i]);
+		indices[i] = index;
+		cellCount[index] += 1;
+	}
+
+	size_t index = 0;
+	for (size_t i = 0; i < cellNumber; i++) {
+		offset[i] = index;
+		cellIndex[i] = index;
+		index += cellCount[i];
+	}
+	offset.back() = index;
+
+	for (size_t i = 0; i < particleNumber; i++) {
+		while (i < offset[indices[i]] || i >= cellIndex[indices[i]]) {
+			size_t j = cellIndex[indices[i]]++;
+			std::swap(indices[i], indices[j]);
+			swap(i, j);
 		}
-		for (int dy = -1; dy <= 1; dy++) {
-			if (gridPos.y + dy < 0 || gridPos.y + dy >= size.y) {
-				continue;
-			}
-			for (int dz = -1; dz <= 1; dz++) {
-				if (gridPos.z + dz < 0 || gridPos.z + dz >= size.z) {
-					continue;
+	}
+}
+
+/* Query the neighbor points
+* Then do func(i, j)
+* Expect Func format:
+* void Func(size_t j);
+*/
+//template<typename Func>
+void Grid::query(const PCISPH::Vec3 &pos, std::function<void(size_t)> func) const {
+	glm::u64vec3 boundBoxMin = this->getGridPos(pos - PCISPH::Vec3(this->cellSize));
+	glm::u64vec3 boundBoxMax = this->getGridPos(pos + PCISPH::Vec3(this->cellSize));
+
+	for (size_t z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
+		for (size_t y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
+			for (size_t x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
+				size_t cellIndex = linearIndex(PCISPH::uVec3(x, y, z));
+				for (size_t neighborIndex = offset[cellIndex]; neighborIndex < offset[cellIndex + 1]; neighborIndex++) {
+					func(neighborIndex);
 				}
-				PCISPH::iVec3 pos = gridPos + PCISPH::iVec3(dx, dy, dz);
-				size_t posIndex = this->getGridIndex(pos);
-				neighbors.push_back(this->grid[posIndex]);
 			}
 		}
 	}
 }
 
-//void Grid::getNeighbors(const PCISPH::Vec3 pos, std::vector<size_t> &neighbors) const {
-//	PCISPH::iVec3 gridPos = this->getGridPos(pos);
-//	size_t gridIndex = this->getGridIndex(gridPos);
-//
-//}
 
-inline PCISPH::iVec3 Grid::getGridPos(const PCISPH::Vec3 &pos) const {
-	return PCISPH::iVec3(pos / this->unitSize);
+inline PCISPH::uVec3 Grid::getGridPos(const PCISPH::Vec3 &pos) const {
+	PCISPH::Vec3 p(pos);
+	if (PCISPH::minComponent(p) < 0) {
+		p = PCISPH::Vec3(0);
+	}
+	if (PCISPH::maxComponent(p - boxSize) > 0) {
+		p = boxSize;
+	}
+	return PCISPH::uVec3(
+		(PCISPH::uint)floor(p.x / cellSize),
+		(PCISPH::uint)floor(p.y / cellSize),
+		(PCISPH::uint)floor(p.z / cellSize)
+	);
 }
 
-inline size_t Grid::getGridIndex(const PCISPH::iVec3 &pos) const {
-	return pos.x * size.y * size.z + pos.y * size.z + pos.z;
+inline size_t Grid::linearIndex(const PCISPH::uVec3 &gridPos) const {
+	return gridPos.x + gridPos.y * gridSize.x + gridPos.z * gridSize.x * gridSize.y;
+}
+
+inline size_t Grid::linearIndex(const PCISPH::Vec3 &pos) const {
+	return linearIndex(getGridPos(pos));
 }

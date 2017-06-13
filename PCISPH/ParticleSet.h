@@ -12,30 +12,31 @@ public:
 	ParticleSet();
 	~ParticleSet();
 
-	typedef struct _Particle {
-		PCISPH::Vec3 position;
-		PCISPH::Vec3 velosity{ 0.0f, 0.0f, 0.0f };
-		PCISPH::Vec3 forces{ 0.0f, 0.0f, 0.0f };
-		PCISPH::Vec3 pressureForce{ 0.0f, 0.0f, 0.0f };
-		float density = 0.0f;
-		float pressure = 0.0f;
-
-		_Particle(PCISPH::Vec3 pos) : position(pos) {}
-	} Particle;
-
 	float particleMass;
 
 	void init(const float particleMass);
 
 	const std::vector<PCISPH::Vec3>& getParticlePositions() const { return this->position; }
-	void addParticle(const Particle &particle);
+
+	void addParticle(
+		const PCISPH::Vec3 &p,
+		const PCISPH::Vec3 &v
+	);
 
 	std::vector<PCISPH::Vec3> position;
-	std::vector<PCISPH::Vec3> velosity;
+	std::vector<PCISPH::Vec3> predictPosition;
+
+	std::vector<PCISPH::Vec3> velocity;
+	std::vector<PCISPH::Vec3> predictVelocity;
+
+	std::vector<PCISPH::Vec3> normal;
 	std::vector<PCISPH::Vec3> forces;
 	std::vector<PCISPH::Vec3> pressureForce;
+
 	std::vector<float> density;
 	std::vector<float> pressure;
+
+	float maxDensityErr;
 
 	size_t count;
 

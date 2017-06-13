@@ -21,5 +21,7 @@ namespace PCISPH
 		Vertex* v[8];
 	} Grid;
 
+	typedef glm::u64vec3 uVec3;
 
+	typedef glm::u64 uint;
 }
