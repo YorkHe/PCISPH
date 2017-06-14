@@ -2,7 +2,7 @@
   "mode": "STATIC",
   "referenceDensity": 998.29,
   "particleRadius": 0.01,
-  "viscosityCoefficient": 2.0,
+  "viscosityCoefficient": 1.0,
   "surfaceTensionCoefficient": 1.0,
   "gasStiffness": 3,
   "kernelParticles": 20,

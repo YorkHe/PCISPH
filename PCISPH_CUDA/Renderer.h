@@ -18,6 +18,8 @@ public:
 
 	void draw(const ParticleSet &particleSet);
 
+	double lastTime;
+	int frames = 0;
 private:
 
 	const float gridSize = 0.0002;
@@ -45,5 +47,6 @@ private:
 
 	void drawParticle();
 	void drawMesh();
+	void drawFps();
 };
 

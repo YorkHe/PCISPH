@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#include <iostream>
+
 #include <gl/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -19,6 +21,9 @@ void Renderer::init(Window *window, const Scene *scene) {
 	this->particleShader = Shader("shaders/particle.vert", "shaders/particle.frag");
 	this->sceneShader = Shader("shaders/scene.vert", "shaders/scene.frag");
 	this->marchingCube = new MarchingCube(scene, mParticleSet);
+
+	lastTime = glfwGetTime();
+	frames = 0;
 
 	// codes below are just for test
 	sceneVAO = -1;
@@ -123,6 +128,23 @@ void Renderer::draw(const ParticleSet& particleSet)
 
 	drawParticle();
 	//drawMesh();
+	drawFps();
+}
+
+void Renderer::drawFps()
+{
+	double currentTime = glfwGetTime();
+
+	if (currentTime - lastTime >= 1.0)
+	{
+		std::cout << "fps:" << double(frames) / (currentTime - lastTime) << std::endl;
+		frames = 0;
+		lastTime = currentTime;
+	}
+
+	frames++;
+
+
 }
 
 void Renderer::drawMesh()
