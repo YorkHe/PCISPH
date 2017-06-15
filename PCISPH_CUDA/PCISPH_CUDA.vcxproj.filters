@@ -27,6 +27,7 @@
     <None Include="config.json">
       <Filter>config</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -68,6 +69,7 @@
     <ClInclude Include="Window.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">

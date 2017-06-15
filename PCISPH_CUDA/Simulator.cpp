@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cuda_runtime.h>
 
 #define KERNEL_SCALE 4.0f
 #define EPSILON 1e-30f
@@ -18,6 +19,7 @@ Simulator::~Simulator()
 {
 }
 
+__global__
 void Simulator::init(const Scene *scene) {
 	// Initialize scene
 	this->scene = scene;
@@ -50,6 +52,7 @@ void Simulator::init(const Scene *scene) {
 	std::cout << std::endl;
 }
 
+__global__
 void Simulator::update(const size_t maxIterations) {
 
 	updateFluidGrid();
@@ -97,25 +100,6 @@ void Simulator::updateBoundaryGrid() {
 void Simulator::computeDensity() {
 
 	// compute boundary particles' densities
-	for (size_t i = 0; i < boundaryDensity.size(); i++) {
-		float fluidTerm = 0.0f;
-		float boundaryTerm = 0.0f;
-
-		fluidGrid.query(boundaryPosition[i], [this, i, &fluidTerm](size_t j) {
-			PCISPH::Vec3 r = boundaryPosition[i] - particleSet.position[j];
-			float rLen = PCISPH::length(r);
-			if (rLen > kernel.H || rLen < EPSILON) return;
-			fluidTerm += kernel.poly6Kernel(r);
-		});
-		/*boundaryGrid.query(boundaryPosition[i], [this, i, &boundaryTerm](size_t j) {
-			PCISPH::Vec3 r = boundaryPosition[i] - boundaryPosition[j];
-			float rLen = PCISPH::length(r);
-			if (rLen > kernel.H || rLen < EPSILON) return;
-			boundaryTerm += boundaryMass[j] * kernel.poly6Kernel(r);
-		});*/
-
-		boundaryDensity[i] = particleSet.particleMass * fluidTerm + boundaryTerm;
-	}
 
 	// compute fluid particles' densities
 	for (size_t i = 0; i < particleSet.count; i++) {
@@ -129,19 +113,14 @@ void Simulator::computeDensity() {
 			if (rLen > kernel.H || rLen < EPSILON) return;
 			fluidTerm += kernel.poly6Kernel(r);
 		});
-		/*boundaryGrid.query(pos, [this, &pos, &boundaryTerm](size_t j) {
-			PCISPH::Vec3 r = pos - boundaryPosition[j];
-			float rLen = PCISPH::length(r);
-			if (rLen > kernel.H || rLen < EPSILON) return;
-			boundaryTerm += boundaryMass[j] * kernel.poly6Kernel(r);
-		});*/
 
 		particleSet.density[i] = particleSet.particleMass * fluidTerm + boundaryTerm;
 	}
 }
 
 void Simulator::computeNormal() {
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for num_threads(8)
+	for (auto i = 0; i < particleSet.count; i++) {
 		PCISPH::Vec3 normal(0.0f);
 		fluidGrid.query(particleSet.position[i], [this, i, &normal](size_t j) {
 			PCISPH::Vec3 r = particleSet.position[i] - particleSet.position[j];
@@ -157,7 +136,8 @@ void Simulator::computeNormal() {
 void Simulator::computeForces() {
 	computeNormal();
 	float squaredMass = particleSet.particleMass * particleSet.particleMass;
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for num_threads(8)
+	for (auto i = 0; i < particleSet.count; i++) {
 		PCISPH::Vec3 viscosity(0.f);
 		PCISPH::Vec3 cohesion(0.f);
 		PCISPH::Vec3 curvature(0.f);
@@ -189,7 +169,8 @@ void Simulator::clearPressureAndPressureForce() {
 }
 
 void Simulator::predictVelocityAndPosition() {
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for num_threads(8)
+	for (int i = 0; i < particleSet.count; i++) {
 		PCISPH::Vec3 acceleration = (particleSet.forces[i] + particleSet.pressureForce[i]) / particleSet.particleMass;
 		particleSet.predictVelocity[i] = particleSet.velocity[i] + scene->timeStep * acceleration;
 		particleSet.predictPosition[i] = particleSet.position[i] + particleSet.predictVelocity[i] * scene->timeStep;
@@ -198,7 +179,8 @@ void Simulator::predictVelocityAndPosition() {
 
 void Simulator::updatePressure() {
 
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for num_threads(8)
+	for (int i = 0; i < particleSet.count; i++) {
 		float fDensity = 0.f;
 		fluidGrid.query(particleSet.position[i], [this, i, &fDensity](size_t j) {
 			PCISPH::Vec3 r = particleSet.predictPosition[i] - particleSet.predictPosition[j];
@@ -207,12 +189,7 @@ void Simulator::updatePressure() {
 			fDensity += kernel.poly6Kernel(r);
 		});
 		float bDensity = 0.f;
-		/*boundaryGrid.query(particleSet.position[i], [this, i, &bDensity](size_t j) {
-			PCISPH::Vec3 r = particleSet.predictPosition[i] - boundaryPosition[j];
-			float rLen = PCISPH::length(r);
-			if (rLen > kernel.H || rLen < EPSILON) return;
-			bDensity += boundaryMass[j] * kernel.poly6Kernel(r);
-		});*/
+
 		float density = fDensity * particleSet.particleMass + bDensity;
 		float densityVariation = std::max(0.f, density - scene->referenceDensity);
 		particleSet.maxDensityErr = std::max(particleSet.maxDensityErr, densityVariation);
@@ -222,7 +199,8 @@ void Simulator::updatePressure() {
 }
 
 void Simulator::updatePressureForce() {
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for num_threads(8)
+	for (int i = 0; i < particleSet.count; i++) {
 		PCISPH::Vec3 pressureForce(0.f);
 		fluidGrid.query(particleSet.position[i], [this, i, &pressureForce](size_t j) {
 			PCISPH::Vec3 r = particleSet.predictPosition[i] - particleSet.predictPosition[j];
@@ -232,21 +210,15 @@ void Simulator::updatePressureForce() {
 			float term2 = particleSet.pressure[j] / particleSet.density[j] / particleSet.density[j];
 			pressureForce -= particleSet.particleMass * (term1 + term2) * kernel.spikyKernelGradient(r);
 		});
-		/*boundaryGrid.query(particleSet.position[i], [this, i, &pressureForce](size_t j) {
-			PCISPH::Vec3 r = particleSet.predictPosition[i] - boundaryPosition[j];
-			float rLen = PCISPH::length(r);
-			if (rLen > kernel.H || rLen < 1e-5) return;
-			float term1 = particleSet.pressure[i] / particleSet.density[i] / particleSet.density[i];
-			float term2 = particleSet.pressure[i] / boundaryDensity[j] / boundaryDensity[j];
-			pressureForce -= boundaryMass[j] * (term1 + term2) * kernel.spikyKernelGradient(r);
-		});*/
+
 		pressureForce *= particleSet.particleMass;
 		particleSet.pressureForce[i] = pressureForce;
 	}
 }
 
 void Simulator::updateVelocityAndPosition() {
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for num_threads(8)
+	for (int i = 0; i < particleSet.count; i++) {
 		PCISPH::Vec3 acceleration = (particleSet.forces[i] + particleSet.pressureForce[i]) / particleSet.particleMass;
 		particleSet.velocity[i] += acceleration * scene->timeStep;
 		particleSet.position[i] += particleSet.velocity[i] * scene->timeStep;
@@ -271,7 +243,8 @@ void Simulator::handleCollision() {
 	};
 
 	PCISPH::Vec3 box = scene->boxSize;
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for num_threads(8)
+	for (int i = 0; i < particleSet.count; i++) {
 		const auto &p = particleSet.position[i];
 		if (p.x < 0) {
 			collisionFunc(i, PCISPH::Vec3(1.f, 0.f, 0.f), -p.x);
@@ -294,67 +267,10 @@ void Simulator::handleCollision() {
 	}
 }
 
+__device__
 void Simulator::initParticlesPositions() {
 	float r = scene->particleRadius;
 	float d = 2 * r;
-
-	// initialize boundary particles
-	PCISPH::Vec3 box = scene->boxSize;
-
-	// x-y plane
-	for (float x = d; x <= box.x - d; x += d) {
-		for (float y = d; y <= box.y - d; y += d) {
-			boundaryPosition.emplace_back(x, y, 0.0f);
-			boundaryPosition.emplace_back(x, y, box.z);
-		}
-	}
-	// x-z plane
-	for (float x = d; x <= box.x - d; x += d) {
-		for (float z = d; z <= box.z - d; z += d) {
-			boundaryPosition.emplace_back(x, 0.0f, z);
-			boundaryPosition.emplace_back(x, box.y, z);
-		}
-	}
-	// y-z plane
-	for (float y = d; y <= box.y - d; y += d) {
-		for (float z = d; z <= box.z - d; z += d) {
-			boundaryPosition.emplace_back(0.0f, y, z);
-			boundaryPosition.emplace_back(box.x, y, z);
-		}
-	}
-	// x axis
-	for (float x = d; x <= box.x - d; x += d) {
-		boundaryPosition.emplace_back(x, 0.0f, 0.0f);
-		boundaryPosition.emplace_back(x, 0.0f, box.z);
-		boundaryPosition.emplace_back(x, box.y, 0.0f);
-		boundaryPosition.emplace_back(x, box.y, box.z);
-	}
-	// y axis
-	for (float y = d; y <= box.y - d; y += d) {
-		boundaryPosition.emplace_back(0.0f, y, 0.0f);
-		boundaryPosition.emplace_back(box.x, y, 0.0f);
-		boundaryPosition.emplace_back(0.0f, y, box.z);
-		boundaryPosition.emplace_back(box.x, y, box.z);
-	}
-	// z axis
-	for (float z = d; z <= box.z - d; z += d) {
-		boundaryPosition.emplace_back(0.0f, 0.0f, z);
-		boundaryPosition.emplace_back(box.x, 0.0f, z);
-		boundaryPosition.emplace_back(0.0f, box.y, z);
-		boundaryPosition.emplace_back(box.x, box.y, z);
-	}
-	// corners
-	boundaryPosition.emplace_back(0.0f, 0.0f, 0.0f);
-	boundaryPosition.emplace_back(box.x, 0.0f, 0.0f);
-	boundaryPosition.emplace_back(0.0f, box.y, 0.0f);
-	boundaryPosition.emplace_back(0.0f, 0.0f, box.z);
-	boundaryPosition.emplace_back(box.x, box.y, 0.0f);
-	boundaryPosition.emplace_back(0.0f, box.y, box.z);
-	boundaryPosition.emplace_back(box.x, 0.0f, box.z);
-	boundaryPosition.emplace_back(box.x, box.y, box.z);
-
-	boundaryMass.resize(boundaryPosition.size());
-	boundaryDensity.resize(boundaryPosition.size());
 
 	// initialize fluid particles
 	PCISPH::Vec3 fBox = scene->fluidSize;

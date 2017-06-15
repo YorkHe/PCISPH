@@ -2,6 +2,7 @@
 #include "utils.h"
 #include <algorithm>
 #include <iostream>
+#include <thrust/detail/config/host_device.h>
 
 Grid::Grid() :cellSize(), offset() {
 
@@ -64,13 +65,14 @@ void Grid::update(const std::vector<PCISPH::Vec3> &positions, std::function<void
 * void Func(size_t j);
 */
 //template<typename Func>
+__device__
 void Grid::query(const PCISPH::Vec3 &pos, std::function<void(size_t)> func) const {
 	glm::u64vec3 boundBoxMin = this->getGridPos(pos - PCISPH::Vec3(this->cellSize));
 	glm::u64vec3 boundBoxMax = this->getGridPos(pos + PCISPH::Vec3(this->cellSize));
 
-	for (size_t z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
-		for (size_t y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
-			for (size_t x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
+	for (int z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
+		for (int y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
+			for (int x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
 				size_t cellIndex = linearIndex(PCISPH::uVec3(x, y, z));
 				for (size_t neighborIndex = offset[cellIndex]; neighborIndex < offset[cellIndex + 1]; neighborIndex++) {
 					func(neighborIndex);
