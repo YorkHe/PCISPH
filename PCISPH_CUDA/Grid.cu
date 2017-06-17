@@ -35,6 +35,7 @@ void Grid::update(const thrust::host_vector<PCISPH::Vec3>& positions, thrust::ho
 	// grid indices for each particle
 	std::vector<size_t> indices(particleNumber);
 
+#pragma omp parallel for
 	for (size_t i = 0; i < particleNumber; i++) {
 		size_t index = linearIndex(positions[i]);
 		indices[i] = index;
@@ -43,6 +44,7 @@ void Grid::update(const thrust::host_vector<PCISPH::Vec3>& positions, thrust::ho
 	offset.resize(cellNumber);
 
 	size_t index = 0;
+#pragma omp parallel for
 	for (size_t i = 0; i < cellNumber; i++) {
 		offset[i] = index;
 		cellIndex[i] = index;
@@ -53,6 +55,7 @@ void Grid::update(const thrust::host_vector<PCISPH::Vec3>& positions, thrust::ho
 	
 	offset.back() = index;
 
+#pragma omp parallel for
 	for (size_t i = 0; i < particleNumber; i++) {
 		while (i < offset[indices[i]] || i >= cellIndex[indices[i]]) {
 			size_t j = cellIndex[indices[i]]++;

@@ -2,7 +2,6 @@
 #include "utils.h"
 
 #include <iostream>
-#include <cuda_runtime.h>
 
 #include <thrust/device_new.h>
 
@@ -121,7 +120,6 @@ void Simulator::init(const Scene *scene) {
 
 	d_fluidGrid = thrust::device_new<Grid>();
 	initDeviceGrid << <1, 1 >> > (thrust::raw_pointer_cast(d_fluidGrid), fluidGrid.cellSize, fluidGrid.boxSize, fluidGrid.gridSize, fluidGrid.cellNumber);
-	cudaDeviceSynchronize();
 	d_kernel = thrust::device_new<Kernel>();
 	initDeviceKernel << <1, 1 >> > (thrust::raw_pointer_cast(d_kernel), kernelRadius);
 	cudaDeviceSynchronize();
@@ -283,7 +281,8 @@ void updatePressure(Grid* grid, DeviceParticleSetPointer* particleSet, size_t* o
 		for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
 			for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
 				size_t cellIndex = grid->linearIndex(PCISPH::uVec3(x, y, z));
-				for (size_t j = offset[cellIndex]; j < offset[cellIndex + 1]; j++) {
+				auto upper = offset[cellIndex + 1];
+				for (size_t j = offset[cellIndex]; j < upper; j++) {
 					PCISPH::Vec3 r = particleSet->predictPosition[i] - particleSet->predictPosition[j];
 					float rLen = PCISPH::length(r);
 					if (rLen > kernel->H || rLen < EPSILON) continue;
@@ -454,9 +453,9 @@ void Simulator::initDensityVarianceScale() {
 				PCISPH::Vec3 pos(x, y, z);
 				if (pos == PCISPH::Vec3(0.0f)) return;
 
-				PCISPH::Vec3 kernelValue1 = kernel.spikyKernelGradient(-pos);
+				PCISPH::Vec3 kernelValue1 = kernel.h_spikyKernelGradient(-pos);
 				//PCISPH::Vec3 kernelValue1 = kernel.poly6KernelGradient(-pos);
-				PCISPH::Vec3 kernelValue2 = kernel.poly6KernelGradient(-pos);
+				PCISPH::Vec3 kernelValue2 = kernel.h_poly6KernelGradient(-pos);
 				tmp1 += kernelValue1;
 				tmp2 += kernelValue2;
 				tmp3 += PCISPH::dot(kernelValue1, kernelValue2);
@@ -468,8 +467,9 @@ void Simulator::initDensityVarianceScale() {
 
 void Simulator::update(const size_t maxIterations) {
 
-	int threadsPerBlock = 128;
+	int threadsPerBlock = 256;
 	int numBlocks = (particleSet.count / threadsPerBlock) + 1;
+	float maxDensityErr = 0;
 
 	updateFluidGrid();
 	computeDensity << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel));
@@ -481,17 +481,19 @@ void Simulator::update(const size_t maxIterations) {
 	clearPressureAndPressureForce();
 	size_t iterations = 0;
 	while (iterations < maxIterations) {
-		particleSet.maxDensityErr = 0.f;
+		maxDensityErr = 0;
+		cudaMemcpy(&(this->particleSetPointer.get()->maxDensityErr), &maxDensityErr, sizeof(float), cudaMemcpyHostToDevice);
 		predictVelocityAndPosition << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(particleSetPointer), scene->timeStep);
-	cudaDeviceSynchronize();
+		cudaDeviceSynchronize();
 		updatePressure << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel), scene->referenceDensity, densityVarianceScale);
-	cudaDeviceSynchronize();
+		cudaDeviceSynchronize();
 		updatePressureForce << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel));
-	cudaDeviceSynchronize();
+		cudaDeviceSynchronize();
 		static const int MIN_ITERATIONS = 3;
 		static const float yita = 0.01;
 		static const float TOL = yita * this->scene->referenceDensity;
-		if (++iterations >= MIN_ITERATIONS && this->particleSet.maxDensityErr < TOL) {
+		cudaMemcpy(&maxDensityErr, &(this->particleSetPointer.get()->maxDensityErr), sizeof(float), cudaMemcpyDeviceToHost);
+		if (++iterations >= MIN_ITERATIONS && maxDensityErr < TOL) {
 			break;
 		}
 	}
@@ -503,7 +505,7 @@ void Simulator::update(const size_t maxIterations) {
 
 
 	static size_t count = 0;
-	std::cout << "maxDensityErr = " << this->particleSet.maxDensityErr << std::endl;
+	std::cout << "maxDensityErr = " << maxDensityErr << std::endl;
 	std::cout << "iterations = " << iterations << std::endl;
 	std::cout << "count = " << count << std::endl;
 	std::cout << std::endl;

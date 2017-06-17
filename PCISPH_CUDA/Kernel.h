@@ -42,7 +42,7 @@ public:
 	*/
 
 	// Poly6 kernel is used to interpolate density
-	__host__ __device__
+	__device__
 	float poly6Kernel(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
@@ -53,7 +53,7 @@ public:
 			return 0;
 		}
 	}
-	__host__ __device__
+	__device__
 	PCISPH::Vec3 poly6KernelGradient(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
@@ -64,7 +64,21 @@ public:
 			return PCISPH::Vec3(0, 0, 0);
 		}
 	}
-	__host__ __device__
+
+	PCISPH::Vec3 h_poly6KernelGradient(const PCISPH::Vec3 &r) {
+		float rNorm = this->slow_normalize(r);
+		if (rNorm <= this->h) {
+			float val = this->h2 - rNorm * rNorm;
+			return this->poly6GradFactor * val * val * r;
+		}
+		else {
+			return PCISPH::Vec3(0, 0, 0);
+		}
+	}
+
+
+
+	__device__
 	float poly6KernelLaplacian(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
@@ -78,7 +92,7 @@ public:
 
 	// Spiky kernel is used to interpolate pressure
 	//inline float spikyKernel(const PCISPH::Vec3 &r);
-	__host__ __device__
+	__device__
 	PCISPH::Vec3 spikyKernelGradient(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
@@ -90,9 +104,20 @@ public:
 		}
 	}
 
+	PCISPH::Vec3 h_spikyKernelGradient(const PCISPH::Vec3 &r) {
+		float rNorm = this->slow_normalize(r);
+		if (rNorm <= this->h) {
+			float val = this->h - rNorm;
+			return this->spikyGradFactor * val * val / rNorm * r;
+		}
+		else {
+			return PCISPH::Vec3(0, 0, 0);
+		}
+	}
+
 	// viscosity kernel
 	//inline float viscosityKernel(const PCISPH::Vec3 &r);
-	__host__ __device__
+	__device__
 	float viscosityKernelLaplacian(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
@@ -104,7 +129,7 @@ public:
 	}
 
 	// cohesion kernel
-	__host__ __device__
+	__device__
 	float cohesionKernel(const float r) {
 		if (2 * r > this->h && r <= h) {
 			float t = this->h - r;
@@ -143,9 +168,14 @@ private:
 
 	__host__ __device__
 	void initFactors();
-	__host__ __device__
-	float normalize(const PCISPH::Vec3 &r) {
+
+	float slow_normalize(const PCISPH::Vec3 &r) {
 		return sqrt(r.x * r.x + r.y * r.y + r.z * r.z);
+	}
+
+	__device__
+	float normalize(const PCISPH::Vec3 &r) {
+		return sqrtf(r.x * r.x + r.y * r.y + r.z * r.z);
 	}
 };
 
