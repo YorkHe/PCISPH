@@ -167,7 +167,7 @@ void computeDensity(Grid* grid, DeviceParticleSetPointer* particles, size_t* off
 				for (size_t neighborIndex = offset[cellIndex]; neighborIndex < offset[cellIndex + 1]; neighborIndex++) {
 					PCISPH::Vec3 r = pos - particles->position[neighborIndex];
 					float rLen = PCISPH::length(r);
-					if (rLen > kernel->H || rLen < EPSILON) return;
+					if (rLen > kernel->H || rLen < EPSILON) continue;
 					fluidTerm += kernel->poly6Kernel(r);
 				}
 			}
@@ -195,7 +195,7 @@ void computeNormal(Grid* grid, DeviceParticleSetPointer* particles, size_t* offs
 				for (size_t neighborIndex = offset[cellIndex]; neighborIndex < offset[cellIndex + 1]; neighborIndex++) {
 					PCISPH::Vec3 r = particles->position[i] - particles->position[neighborIndex];
 					float rLen = PCISPH::length(r);
-					if (rLen > kernel->H || rLen < EPSILON) return;
+					if (rLen > kernel->H || rLen < EPSILON) continue;
 					n += kernel->poly6KernelGradient(r) / particles->density[neighborIndex];
 				}
 			}
@@ -228,7 +228,7 @@ void computeForces(Grid* grid, DeviceParticleSetPointer* particleSet, size_t* of
 				for (size_t j = offset[cellIndex]; j < offset[cellIndex + 1]; j++) {
 					PCISPH::Vec3 r = particleSet->position[i] - particleSet->position[j];
 					float rLen = PCISPH::length(r);
-					if (rLen > kernel->H || rLen < EPSILON) return;
+					if (rLen > kernel->H || rLen < EPSILON) continue;
 
 					PCISPH::Vec3 vDiff = particleSet->velocity[i] - particleSet->velocity[j];
 					viscosity -= vDiff * kernel->viscosityKernelLaplacian(r) / particleSet->density[j];
@@ -286,7 +286,7 @@ void updatePressure(Grid* grid, DeviceParticleSetPointer* particleSet, size_t* o
 				for (size_t j = offset[cellIndex]; j < offset[cellIndex + 1]; j++) {
 					PCISPH::Vec3 r = particleSet->predictPosition[i] - particleSet->predictPosition[j];
 					float rLen = PCISPH::length(r);
-					if (rLen > kernel->H || rLen < EPSILON) return;
+					if (rLen > kernel->H || rLen < EPSILON) continue;
 					fDensity += kernel->poly6Kernel(r);
 				}
 			}
@@ -322,7 +322,7 @@ void updatePressureForce(Grid* grid, DeviceParticleSetPointer* particleSet, size
 				for (size_t j = offset[cellIndex]; j < offset[cellIndex + 1]; j++) {
 					PCISPH::Vec3 r = particleSet->predictPosition[i] - particleSet->predictPosition[j];
 					float rLen = PCISPH::length(r);
-					if (rLen > kernel->H || rLen < 1e-5) return;
+					if (rLen > kernel->H || rLen < 1e-5) continue;
 					float term1 = particleSet->pressure[i] / particleSet->density[i] / particleSet->density[i];
 					float term2 = particleSet->pressure[j] / particleSet->density[j] / particleSet->density[j];
 					pressureForce -= particleSet->particleMass * (term1 + term2) * kernel->spikyKernelGradient(r);
