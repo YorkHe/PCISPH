@@ -1,5 +1,5 @@
 #include "System.h"
-
+#include "../packages/nupengl.core.0.1.0.1/build/native/include/gl/glew.h"
 
 
 System::System(): scene(nullptr), simulator(new Simulator), window(new Window), renderer(new Renderer)

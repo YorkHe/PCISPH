@@ -20,7 +20,7 @@ void Renderer::init(Window *window, const Scene *scene) {
 	this->scene = scene;
 	this->particleShader = Shader("shaders/particle.vert", "shaders/particle.frag");
 	this->sceneShader = Shader("shaders/scene.vert", "shaders/scene.frag");
-	this->marchingCube = new MarchingCube(scene, mParticleSet);
+	this->marchingCube = new MarchingCube(scene, &mParticleSet);
 
 	lastTime = glfwGetTime();
 	frames = 0;
@@ -122,7 +122,7 @@ void Renderer::draw(DeviceParticleSet* particleSet)
 
 	mvp = camera.getProjViewMatrix() * model;
 
-	mParticleSet->update(particleSet);
+	mParticleSet.update(particleSet);
 	//marchingCube->updateParticles(&particleSet);
 	drawScene();
 
@@ -185,13 +185,13 @@ void Renderer::drawParticle() {
 
 	glm::mat4 mvp = camera.getProjViewMatrix() * model;
 
-	updateParticleVAO(mParticleSet->position);
+	updateParticleVAO(mParticleSet.position);
 	particleShader.use();
 	glPointSize(10);
 	glUniform3fv(glGetUniformLocation(particleShader.program, "lightDir"), 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f)));
 	glUniformMatrix4fv(glGetUniformLocation(particleShader.program, "mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
 	glBindVertexArray(this->particleVAO);
-	glDrawArrays(GL_POINTS, 0, (GLsizei)mParticleSet->count);
+	glDrawArrays(GL_POINTS, 0, (GLsizei)mParticleSet.count);
 	glBindVertexArray(0);
 	particleShader.unUse();
 }

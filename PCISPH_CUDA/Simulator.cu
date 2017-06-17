@@ -84,7 +84,7 @@ void Simulator::init(const Scene *scene) {
 
 	particleSetPointer = thrust::device_new<DeviceParticleSetPointer>();
 
-	initParticleSetPointer << <1, 1 >> >(
+	initParticleSetPointer << <1, 1 >> > (
 		thrust::raw_pointer_cast(particleSetPointer),
 		thrust::raw_pointer_cast(particleSet.position.data()),
 		thrust::raw_pointer_cast(particleSet.predictPosition.data()),
@@ -100,6 +100,7 @@ void Simulator::init(const Scene *scene) {
 		particleSet.count
 		);
 
+	cudaDeviceSynchronize();
 	// Initialize kernel
 	float kernelRadius = KERNEL_SCALE * scene->particleRadius;
 	kernel.init(kernelRadius);
@@ -120,8 +121,10 @@ void Simulator::init(const Scene *scene) {
 
 	d_fluidGrid = thrust::device_new<Grid>();
 	initDeviceGrid << <1, 1 >> > (thrust::raw_pointer_cast(d_fluidGrid), fluidGrid.cellSize, fluidGrid.boxSize, fluidGrid.gridSize, fluidGrid.cellNumber);
+	cudaDeviceSynchronize();
 	d_kernel = thrust::device_new<Kernel>();
 	initDeviceKernel << <1, 1 >> > (thrust::raw_pointer_cast(d_kernel), kernelRadius);
+	cudaDeviceSynchronize();
 
 	this->relax();
 
@@ -149,56 +152,58 @@ __global__
 void computeDensity(Grid* grid, DeviceParticleSetPointer* particles, size_t* offset, Kernel* kernel) {
 
 	// compute fluid particles' densities
-	for (size_t i = 0; i < particles->count; i++) {
-		float fluidTerm = 0.0f;
-		PCISPH::Vec3 pos = particles->position[i];
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if (i >= particles->count) return;
+	float fluidTerm = 0.0f;
+	PCISPH::Vec3 pos = particles->position[i];
 
-		glm::u64vec3 boundBoxMin = grid->getGridPos(pos - PCISPH::Vec3(grid->cellSize));
-		glm::u64vec3 boundBoxMax = grid->getGridPos(pos + PCISPH::Vec3(grid->cellSize));
+	PCISPH::uVec3 boundBoxMin = getGridPos(pos - PCISPH::Vec3(grid->cellSize), grid->boxSize, grid->cellSize);
+	PCISPH::uVec3 boundBoxMax = getGridPos(pos + PCISPH::Vec3(grid->cellSize), grid->boxSize, grid->cellSize);
 
-		for (auto z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
-			for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
-				for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
-					size_t cellIndex = grid->linearIndex(PCISPH::uVec3(x, y, z));
-					for (size_t neighborIndex = offset[cellIndex]; neighborIndex < offset[cellIndex + 1]; neighborIndex++) {
-						PCISPH::Vec3 r = pos - particles->position[neighborIndex];
-						float rLen = PCISPH::length(r);
-						if (rLen > kernel->H || rLen < EPSILON) return;
-						fluidTerm += kernel->poly6Kernel(r);
-					}
+	for (auto z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
+		for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
+			for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
+				size_t cellIndex = grid->linearIndex(PCISPH::uVec3(x, y, z));
+				for (size_t neighborIndex = offset[cellIndex]; neighborIndex < offset[cellIndex + 1]; neighborIndex++) {
+					PCISPH::Vec3 r = pos - particles->position[neighborIndex];
+					float rLen = PCISPH::length(r);
+					if (rLen > kernel->H || rLen < EPSILON) return;
+					fluidTerm += kernel->poly6Kernel(r);
 				}
 			}
 		}
-
-		particles->density[i] = particles->particleMass * fluidTerm;
 	}
+
+	particles->density[i] = particles->particleMass * fluidTerm;
 }
 
 __global__
 void computeNormal(Grid* grid, DeviceParticleSetPointer* particles, size_t* offset, Kernel* kernel) {
-	for (auto i = 0; i < particles->count; i++) {
-		PCISPH::Vec3 n(0.0f);
 
-		glm::u64vec3 boundBoxMin = grid->getGridPos(particles->position[i] - PCISPH::Vec3(grid->cellSize));
-		glm::u64vec3 boundBoxMax = grid->getGridPos(particles->position[i] + PCISPH::Vec3(grid->cellSize));
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if (i >= particles->count) return;
 
-		for (auto z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
-			for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
-				for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
-					size_t cellIndex = grid->linearIndex(PCISPH::uVec3(x, y, z));
-					for (size_t neighborIndex = offset[cellIndex]; neighborIndex < offset[cellIndex + 1]; neighborIndex++) {
-						PCISPH::Vec3 r = particles->position[i] - particles->position[neighborIndex];
-						float rLen = PCISPH::length(r);
-						if (rLen > kernel->H || rLen < EPSILON) return;
-						n += kernel->poly6KernelGradient(r) / particles->density[neighborIndex];
-					}
+	PCISPH::Vec3 n(0.0f);
+
+	glm::u64vec3 boundBoxMin = grid->getGridPos(particles->position[i] - PCISPH::Vec3(grid->cellSize));
+	glm::u64vec3 boundBoxMax = grid->getGridPos(particles->position[i] + PCISPH::Vec3(grid->cellSize));
+
+	for (auto z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
+		for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
+			for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
+				size_t cellIndex = grid->linearIndex(PCISPH::uVec3(x, y, z));
+				for (size_t neighborIndex = offset[cellIndex]; neighborIndex < offset[cellIndex + 1]; neighborIndex++) {
+					PCISPH::Vec3 r = particles->position[i] - particles->position[neighborIndex];
+					float rLen = PCISPH::length(r);
+					if (rLen > kernel->H || rLen < EPSILON) return;
+					n += kernel->poly6KernelGradient(r) / particles->density[neighborIndex];
 				}
 			}
 		}
-
-		n *= kernel->H * particles->particleMass;
-		particles->normal[i] = n;
 	}
+
+	n *= kernel->H * particles->particleMass;
+	particles->normal[i] = n;
 }
 
 __global__
@@ -206,42 +211,43 @@ void computeForces(Grid* grid, DeviceParticleSetPointer* particleSet, size_t* of
 	float referenceDensity, float viscosityCoefficient, float surfaceTensionCoefficient, PCISPH::Vec3 gravity) {
 	float squaredMass = particleSet->particleMass * particleSet->particleMass;
 
-	for (auto i = 0; i < particleSet->count; i++) {
-		PCISPH::Vec3 viscosity(0.f);
-		PCISPH::Vec3 cohesion(0.f);
-		PCISPH::Vec3 curvature(0.f);
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if (i >= particleSet->count) return;
 
-		glm::u64vec3 boundBoxMin = grid->getGridPos(particleSet->position[i] - PCISPH::Vec3(grid->cellSize));
-		glm::u64vec3 boundBoxMax = grid->getGridPos(particleSet->position[i] + PCISPH::Vec3(grid->cellSize));
+	PCISPH::Vec3 viscosity(0.f);
+	PCISPH::Vec3 cohesion(0.f);
+	PCISPH::Vec3 curvature(0.f);
 
-		for (auto z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
-			for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
-				for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
-					size_t cellIndex = grid->linearIndex(PCISPH::uVec3(x, y, z));
-					for (size_t j = offset[cellIndex]; j < offset[cellIndex + 1]; j++) {
-						PCISPH::Vec3 r = particleSet->position[i] - particleSet->position[j];
-						float rLen = PCISPH::length(r);
-						if (rLen > kernel->H || rLen < EPSILON) return;
+	glm::u64vec3 boundBoxMin = grid->getGridPos(particleSet->position[i] - PCISPH::Vec3(grid->cellSize));
+	glm::u64vec3 boundBoxMax = grid->getGridPos(particleSet->position[i] + PCISPH::Vec3(grid->cellSize));
 
-						PCISPH::Vec3 vDiff = particleSet->velocity[i] - particleSet->velocity[j];
-						viscosity -= vDiff * kernel->viscosityKernelLaplacian(r) / particleSet->density[j];
+	for (auto z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
+		for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
+			for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
+				size_t cellIndex = grid->linearIndex(PCISPH::uVec3(x, y, z));
+				for (size_t j = offset[cellIndex]; j < offset[cellIndex + 1]; j++) {
+					PCISPH::Vec3 r = particleSet->position[i] - particleSet->position[j];
+					float rLen = PCISPH::length(r);
+					if (rLen > kernel->H || rLen < EPSILON) return;
 
-						float Kij = 2.0f * referenceDensity / (particleSet->density[i] + particleSet->density[j]);
-						cohesion += Kij * (r / rLen) * kernel->cohesionKernel(rLen);
-						curvature += Kij * (particleSet->normal[i] - particleSet->normal[j]);
-					}
+					PCISPH::Vec3 vDiff = particleSet->velocity[i] - particleSet->velocity[j];
+					viscosity -= vDiff * kernel->viscosityKernelLaplacian(r) / particleSet->density[j];
+
+					float Kij = 2.0f * referenceDensity / (particleSet->density[i] + particleSet->density[j]);
+					cohesion += Kij * (r / rLen) * kernel->cohesionKernel(rLen);
+					curvature += Kij * (particleSet->normal[i] - particleSet->normal[j]);
 				}
 			}
 		}
-
-
-
-		viscosity *= viscosityCoefficient * squaredMass / particleSet->density[i];
-		cohesion *= -surfaceTensionCoefficient * squaredMass;
-		curvature *= -surfaceTensionCoefficient * particleSet->particleMass;
-
-		particleSet->forces[i] = viscosity + cohesion + curvature + particleSet->particleMass * gravity;
 	}
+
+
+
+	viscosity *= viscosityCoefficient * squaredMass / particleSet->density[i];
+	cohesion *= -surfaceTensionCoefficient * squaredMass;
+	curvature *= -surfaceTensionCoefficient * particleSet->particleMass;
+
+	particleSet->forces[i] = viscosity + cohesion + curvature + particleSet->particleMass * gravity;
 }
 
 void Simulator::clearPressureAndPressureForce() {
@@ -251,82 +257,95 @@ void Simulator::clearPressureAndPressureForce() {
 
 __global__
 void predictVelocityAndPosition(DeviceParticleSetPointer* particleSet, float timeStep) {
-	for (int i = 0; i < particleSet->count; i++) {
-		PCISPH::Vec3 acceleration = (particleSet->forces[i] + particleSet->pressureForce[i]) / particleSet->particleMass;
-		particleSet->predictVelocity[i] = particleSet->velocity[i] + timeStep * acceleration;
-		particleSet->predictPosition[i] = particleSet->position[i] + particleSet->predictVelocity[i] * timeStep;
-	}
+
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if (i >= particleSet->count) return;
+
+	PCISPH::Vec3 acceleration = (particleSet->forces[i] + particleSet->pressureForce[i]) / particleSet->particleMass;
+	particleSet->predictVelocity[i] = particleSet->velocity[i] + timeStep * acceleration;
+	particleSet->predictPosition[i] = particleSet->position[i] + particleSet->predictVelocity[i] * timeStep;
 }
 
 __global__
 void updatePressure(Grid* grid, DeviceParticleSetPointer* particleSet, size_t* offset, Kernel* kernel, float referenceDensity, float densityVarianceScale) {
 
-	for (int i = 0; i < particleSet->count; i++) {
-		float fDensity = 0.f;
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if (i >= particleSet->count) return;
 
-		glm::u64vec3 boundBoxMin = grid->getGridPos(particleSet->position[i] - PCISPH::Vec3(grid->cellSize));
-		glm::u64vec3 boundBoxMax = grid->getGridPos(particleSet->position[i] + PCISPH::Vec3(grid->cellSize));
 
-		for (auto z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
-			for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
-				for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
-					size_t cellIndex = grid->linearIndex(PCISPH::uVec3(x, y, z));
-					for (size_t j = offset[cellIndex]; j < offset[cellIndex + 1]; j++) {
-						PCISPH::Vec3 r = particleSet->predictPosition[i] - particleSet->predictPosition[j];
-						float rLen = PCISPH::length(r);
-						if (rLen > kernel->H || rLen < EPSILON) return;
-						fDensity += kernel->poly6Kernel(r);
-					}
+
+	float fDensity = 0.f;
+
+	glm::u64vec3 boundBoxMin = grid->getGridPos(particleSet->position[i] - PCISPH::Vec3(grid->cellSize));
+	glm::u64vec3 boundBoxMax = grid->getGridPos(particleSet->position[i] + PCISPH::Vec3(grid->cellSize));
+
+	for (auto z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
+		for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
+			for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
+				size_t cellIndex = grid->linearIndex(PCISPH::uVec3(x, y, z));
+				for (size_t j = offset[cellIndex]; j < offset[cellIndex + 1]; j++) {
+					PCISPH::Vec3 r = particleSet->predictPosition[i] - particleSet->predictPosition[j];
+					float rLen = PCISPH::length(r);
+					if (rLen > kernel->H || rLen < EPSILON) return;
+					fDensity += kernel->poly6Kernel(r);
 				}
 			}
 		}
-
-		float bDensity = 0.f;
-
-		float density = fDensity * particleSet->particleMass + bDensity;
-		float densityVariation = max(0.f, density - referenceDensity);
-		particleSet->maxDensityErr = max(particleSet->maxDensityErr, densityVariation);
-
-		particleSet->pressure[i] += densityVarianceScale * densityVariation;
 	}
+
+	float bDensity = 0.f;
+
+	float density = fDensity * particleSet->particleMass + bDensity;
+	float densityVariation = max(0.f, density - referenceDensity);
+	particleSet->maxDensityErr = max(particleSet->maxDensityErr, densityVariation);
+
+	particleSet->pressure[i] += densityVarianceScale * densityVariation;
 }
 
 __global__
 void updatePressureForce(Grid* grid, DeviceParticleSetPointer* particleSet, size_t* offset, Kernel* kernel) {
-	for (int i = 0; i < particleSet->count; i++) {
-		PCISPH::Vec3 pressureForce(0.f);
 
-		glm::u64vec3 boundBoxMin = grid->getGridPos(particleSet->position[i] - PCISPH::Vec3(grid->cellSize));
-		glm::u64vec3 boundBoxMax = grid->getGridPos(particleSet->position[i] + PCISPH::Vec3(grid->cellSize));
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if (i >= particleSet->count) return;
 
-		for (auto z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
-			for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
-				for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
-					size_t cellIndex = grid->linearIndex(PCISPH::uVec3(x, y, z));
-					for (size_t j = offset[cellIndex]; j < offset[cellIndex + 1]; j++) {
-						PCISPH::Vec3 r = particleSet->predictPosition[i] - particleSet->predictPosition[j];
-						float rLen = PCISPH::length(r);
-						if (rLen > kernel->H || rLen < 1e-5) return;
-						float term1 = particleSet->pressure[i] / particleSet->density[i] / particleSet->density[i];
-						float term2 = particleSet->pressure[j] / particleSet->density[j] / particleSet->density[j];
-						pressureForce -= particleSet->particleMass * (term1 + term2) * kernel->spikyKernelGradient(r);
-					}
+
+
+	PCISPH::Vec3 pressureForce(0.f);
+
+	glm::u64vec3 boundBoxMin = grid->getGridPos(particleSet->position[i] - PCISPH::Vec3(grid->cellSize));
+	glm::u64vec3 boundBoxMax = grid->getGridPos(particleSet->position[i] + PCISPH::Vec3(grid->cellSize));
+
+	for (auto z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
+		for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
+			for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
+				size_t cellIndex = grid->linearIndex(PCISPH::uVec3(x, y, z));
+				for (size_t j = offset[cellIndex]; j < offset[cellIndex + 1]; j++) {
+					PCISPH::Vec3 r = particleSet->predictPosition[i] - particleSet->predictPosition[j];
+					float rLen = PCISPH::length(r);
+					if (rLen > kernel->H || rLen < 1e-5) return;
+					float term1 = particleSet->pressure[i] / particleSet->density[i] / particleSet->density[i];
+					float term2 = particleSet->pressure[j] / particleSet->density[j] / particleSet->density[j];
+					pressureForce -= particleSet->particleMass * (term1 + term2) * kernel->spikyKernelGradient(r);
 				}
 			}
 		}
-
-		pressureForce *= particleSet->particleMass;
-		particleSet->pressureForce[i] = pressureForce;
 	}
+
+	pressureForce *= particleSet->particleMass;
+	particleSet->pressureForce[i] = pressureForce;
 }
 
 __global__
 void updateVelocityAndPosition(DeviceParticleSetPointer* particleSet, float timeStep) {
-	for (int i = 0; i < particleSet->count; i++) {
-		PCISPH::Vec3 acceleration = (particleSet->forces[i] + particleSet->pressureForce[i]) / particleSet->particleMass;
-		particleSet->velocity[i] += acceleration * timeStep;
-		particleSet->position[i] += particleSet->velocity[i] * timeStep;
-	}
+
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if (i >= particleSet->count) return;
+
+
+
+	PCISPH::Vec3 acceleration = (particleSet->forces[i] + particleSet->pressureForce[i]) / particleSet->particleMass;
+	particleSet->velocity[i] += acceleration * timeStep;
+	particleSet->position[i] += particleSet->velocity[i] * timeStep;
 }
 
 void Simulator::updateScene() {
@@ -350,27 +369,29 @@ void collisionFunc(DeviceParticleSetPointer* particleSet, float restitution, siz
 __global__
 void handleCollision(DeviceParticleSetPointer* particleSet, float restitution, PCISPH::Vec3 box) {
 
-	for (int i = 0; i < particleSet->count; i++) {
-		const auto &p = particleSet->position[i];
-		PCISPH::Vec3 n;
-		if (p.x < 0) {
-			collisionFunc(particleSet, restitution, i, PCISPH::Vec3(1.f, 0.f, 0.f), -p.x);
-		}
-		if (p.x > box.x) {
-			collisionFunc(particleSet, restitution, i, PCISPH::Vec3(-1.f, 0.f, 0.f), p.x - box.x);
-		}
-		if (p.y < 0) {
-			collisionFunc(particleSet, restitution, i, PCISPH::Vec3(0.f, 1.f, 0.f), -p.y);
-		}
-		if (p.y > box.y) {
-			collisionFunc(particleSet, restitution, i, PCISPH::Vec3(0.f, -1.f, 0.f), p.y - box.y);
-		}
-		if (p.z < 0) {
-			collisionFunc(particleSet, restitution, i, PCISPH::Vec3(0.f, 0.f, 1.f), -p.z);
-		}
-		if (p.z > box.z) {
-			collisionFunc(particleSet, restitution, i, PCISPH::Vec3(0.f, 0.f, -1.f), p.z - box.z);
-		}
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	if (i >= particleSet->count) return;
+
+
+	const auto &p = particleSet->position[i];
+	PCISPH::Vec3 n;
+	if (p.x < 0) {
+		collisionFunc(particleSet, restitution, i, PCISPH::Vec3(1.f, 0.f, 0.f), -p.x);
+	}
+	if (p.x > box.x) {
+		collisionFunc(particleSet, restitution, i, PCISPH::Vec3(-1.f, 0.f, 0.f), p.x - box.x);
+	}
+	if (p.y < 0) {
+		collisionFunc(particleSet, restitution, i, PCISPH::Vec3(0.f, 1.f, 0.f), -p.y);
+	}
+	if (p.y > box.y) {
+		collisionFunc(particleSet, restitution, i, PCISPH::Vec3(0.f, -1.f, 0.f), p.y - box.y);
+	}
+	if (p.z < 0) {
+		collisionFunc(particleSet, restitution, i, PCISPH::Vec3(0.f, 0.f, 1.f), -p.z);
+	}
+	if (p.z > box.z) {
+		collisionFunc(particleSet, restitution, i, PCISPH::Vec3(0.f, 0.f, -1.f), p.z - box.z);
 	}
 }
 
@@ -392,6 +413,31 @@ void Simulator::initParticlesPositions() {
 			}
 		}
 	}
+
+	particleSet.predictPosition.resize(particleSet.count);
+	thrust::fill(particleSet.predictPosition.begin(), particleSet.predictPosition.end(), PCISPH::Vec3(0.f));
+
+	particleSet.predictVelocity.resize(particleSet.count);
+	thrust::fill(particleSet.predictVelocity.begin(), particleSet.predictVelocity.end(), PCISPH::Vec3(0.f));
+
+	particleSet.normal.resize(particleSet.count);
+	thrust::fill(particleSet.normal.begin(), particleSet.normal.end(), PCISPH::Vec3(0.f));
+
+	particleSet.forces.resize(particleSet.count);
+	thrust::fill(particleSet.forces.begin(), particleSet.forces.end(), PCISPH::Vec3(0.f));
+
+	particleSet.pressureForce.resize(particleSet.count);
+	thrust::fill(particleSet.pressureForce.begin(), particleSet.pressureForce.end(), PCISPH::Vec3(0.f));
+
+	particleSet.density.resize(particleSet.count);
+	thrust::fill(particleSet.density.begin(), particleSet.density.end(), 0.f);
+
+	particleSet.pressure.resize(particleSet.count);
+	thrust::fill(particleSet.pressure.begin(), particleSet.pressure.end(), 0.f);
+
+	particleSet.position = particleSet.h_position;
+	particleSet.velocity = particleSet.h_velocity;
+
 }
 
 void Simulator::initDensityVarianceScale() {
@@ -406,7 +452,7 @@ void Simulator::initDensityVarianceScale() {
 		for (float y = -kernel.H - r; y <= kernel.H + r; y += d) {
 			for (float z = -kernel.H - r; z <= kernel.H + r; z += d) {
 				PCISPH::Vec3 pos(x, y, z);
-				if (pos == PCISPH::Vec3(0.0f)) continue;
+				if (pos == PCISPH::Vec3(0.0f)) return;
 
 				PCISPH::Vec3 kernelValue1 = kernel.spikyKernelGradient(-pos);
 				//PCISPH::Vec3 kernelValue1 = kernel.poly6KernelGradient(-pos);
@@ -422,18 +468,26 @@ void Simulator::initDensityVarianceScale() {
 
 void Simulator::update(const size_t maxIterations) {
 
+	int threadsPerBlock = 128;
+	int numBlocks = (particleSet.count / threadsPerBlock) + 1;
 
 	updateFluidGrid();
-	computeDensity<<<1, 1>>>(thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel));
-	computeNormal<<<1,1>>>(thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel));
-	computeForces<<<1,1>>>(thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel), scene->referenceDensity, scene->viscosityCoefficient, scene->surfaceTensionCoefficient, scene->gravity);
+	computeDensity << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel));
+	cudaDeviceSynchronize();
+	computeNormal << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel));
+	cudaDeviceSynchronize();
+	computeForces << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel), scene->referenceDensity, scene->viscosityCoefficient, scene->surfaceTensionCoefficient, scene->gravity);
+	cudaDeviceSynchronize();
 	clearPressureAndPressureForce();
 	size_t iterations = 0;
 	while (iterations < maxIterations) {
 		particleSet.maxDensityErr = 0.f;
-		predictVelocityAndPosition<<<1,1>>>(thrust::raw_pointer_cast(particleSetPointer), scene->timeStep);
-		updatePressure<<<1,1>>>(thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel), scene->referenceDensity, densityVarianceScale);
-		updatePressureForce<<<1,1>>>(thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel));
+		predictVelocityAndPosition << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(particleSetPointer), scene->timeStep);
+	cudaDeviceSynchronize();
+		updatePressure << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel), scene->referenceDensity, densityVarianceScale);
+	cudaDeviceSynchronize();
+		updatePressureForce << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(d_fluidGrid), thrust::raw_pointer_cast(particleSetPointer), thrust::raw_pointer_cast(offset.data()), thrust::raw_pointer_cast(d_kernel));
+	cudaDeviceSynchronize();
 		static const int MIN_ITERATIONS = 3;
 		static const float yita = 0.01;
 		static const float TOL = yita * this->scene->referenceDensity;
@@ -442,8 +496,11 @@ void Simulator::update(const size_t maxIterations) {
 		}
 	}
 
-	updateVelocityAndPosition<<<1,1>>>(thrust::raw_pointer_cast(particleSetPointer), scene->timeStep);
-	handleCollision<<<1,1>>>(thrust::raw_pointer_cast(particleSetPointer), scene->restitution, scene->boxSize);
+	updateVelocityAndPosition << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(particleSetPointer), scene->timeStep);
+	cudaDeviceSynchronize();
+	handleCollision << <numBlocks, threadsPerBlock >> > (thrust::raw_pointer_cast(particleSetPointer), scene->restitution, scene->boxSize);
+	cudaDeviceSynchronize();
+
 
 	static size_t count = 0;
 	std::cout << "maxDensityErr = " << this->particleSet.maxDensityErr << std::endl;

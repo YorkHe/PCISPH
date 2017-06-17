@@ -10,12 +10,14 @@ public:
 	~Kernel() {}
 
 	__host__ __device__
-	void operator = (const Kernel& k) {
+	void operator = (const Kernel k) {
+		this->H = k.H;
 		this->init(k.H);
 	}
 
 	__host__ __device__
-	inline void init(const float h) {
+	void init(const float h) {
+		this->H = h;
 		this->h = h;
 		this->h2 = h * h;
 		this->h6 = this->h2 * this->h2 * this->h2;
@@ -41,7 +43,7 @@ public:
 
 	// Poly6 kernel is used to interpolate density
 	__host__ __device__
-	inline float poly6Kernel(const PCISPH::Vec3 &r) {
+	float poly6Kernel(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
 			float val = this->h2 - rNorm * rNorm;
@@ -52,7 +54,7 @@ public:
 		}
 	}
 	__host__ __device__
-	inline PCISPH::Vec3 poly6KernelGradient(const PCISPH::Vec3 &r) {
+	PCISPH::Vec3 poly6KernelGradient(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
 			float val = this->h2 - rNorm * rNorm;
@@ -63,7 +65,7 @@ public:
 		}
 	}
 	__host__ __device__
-	inline float poly6KernelLaplacian(const PCISPH::Vec3 &r) {
+	float poly6KernelLaplacian(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
 			float r2 = rNorm * rNorm;
@@ -77,7 +79,7 @@ public:
 	// Spiky kernel is used to interpolate pressure
 	//inline float spikyKernel(const PCISPH::Vec3 &r);
 	__host__ __device__
-	inline PCISPH::Vec3 spikyKernelGradient(const PCISPH::Vec3 &r) {
+	PCISPH::Vec3 spikyKernelGradient(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
 			float val = this->h - rNorm;
@@ -91,7 +93,7 @@ public:
 	// viscosity kernel
 	//inline float viscosityKernel(const PCISPH::Vec3 &r);
 	__host__ __device__
-	inline float viscosityKernelLaplacian(const PCISPH::Vec3 &r) {
+	float viscosityKernelLaplacian(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
 			return this->viscosityLapFactor * (this->h - rNorm);
@@ -103,7 +105,7 @@ public:
 
 	// cohesion kernel
 	__host__ __device__
-	inline float cohesionKernel(const float r) {
+	float cohesionKernel(const float r) {
 		if (2 * r > this->h && r <= h) {
 			float t = this->h - r;
 			return this->cohesionFactor * t * t * t * r * r * r;
@@ -120,7 +122,7 @@ public:
 private:
 	float h;
 public:
-	const float &H;
+	float H;
 
 private:
 	float h2;
@@ -142,7 +144,7 @@ private:
 	__host__ __device__
 	void initFactors();
 	__host__ __device__
-	inline float normalize(const PCISPH::Vec3 &r) {
+	float normalize(const PCISPH::Vec3 &r) {
 		return sqrt(r.x * r.x + r.y * r.y + r.z * r.z);
 	}
 };

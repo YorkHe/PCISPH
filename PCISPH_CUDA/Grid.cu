@@ -1,9 +1,9 @@
-#include "Grid.h"
-#include "utils.h"
 #include <algorithm>
 #include <iostream>
 #include <thrust/detail/config/host_device.h>
 
+#include "Grid.h"
+#include "utils.h"
 Grid::Grid() :cellSize() {
 
 }
@@ -25,7 +25,7 @@ void Grid::init(const PCISPH::Vec3 boxSize, float cellSize) {
 
 }
 
-void Grid::update(const thrust::host_vector<PCISPH::Vec3> &positions, thrust::host_vector<size_t> offset, std::function<void(size_t, size_t)> swap) {
+void Grid::update(const thrust::host_vector<PCISPH::Vec3>& positions, thrust::host_vector<size_t>& offset, std::function<void(size_t, size_t)> swap){
 	// particle count in each grid cell
 	std::vector<size_t> cellCount(cellNumber, 0);
 	// pointer to particle array index
@@ -40,6 +40,7 @@ void Grid::update(const thrust::host_vector<PCISPH::Vec3> &positions, thrust::ho
 		indices[i] = index;
 		cellCount[index] += 1;
 	}
+	offset.resize(cellNumber);
 
 	size_t index = 0;
 	for (size_t i = 0; i < cellNumber; i++) {
@@ -47,6 +48,9 @@ void Grid::update(const thrust::host_vector<PCISPH::Vec3> &positions, thrust::ho
 		cellIndex[i] = index;
 		index += cellCount[i];
 	}
+
+	auto a = offset.data();
+	
 	offset.back() = index;
 
 	for (size_t i = 0; i < particleNumber; i++) {
@@ -58,7 +62,7 @@ void Grid::update(const thrust::host_vector<PCISPH::Vec3> &positions, thrust::ho
 	}
 }
 
-inline PCISPH::uVec3 Grid::getGridPos(const PCISPH::Vec3 &pos) const {
+PCISPH::uVec3 Grid::getGridPos(const PCISPH::Vec3 pos) const {
 	PCISPH::Vec3 p(pos);
 	if (PCISPH::minComponent(p) < 0) {
 		p = PCISPH::Vec3(0);
@@ -74,7 +78,7 @@ inline PCISPH::uVec3 Grid::getGridPos(const PCISPH::Vec3 &pos) const {
 }
 
 __device__ __host__ 
-inline PCISPH::uVec3 getGridPos(const PCISPH::Vec3 &pos, PCISPH::Vec3 boxSize, float cellSize) {
+PCISPH::uVec3 getGridPos(const PCISPH::Vec3 &pos, PCISPH::Vec3 boxSize, float cellSize) {
 	PCISPH::Vec3 p(pos);
 	if (PCISPH::minComponent(p) < 0) {
 		p = PCISPH::Vec3(0);
@@ -91,12 +95,12 @@ inline PCISPH::uVec3 getGridPos(const PCISPH::Vec3 &pos, PCISPH::Vec3 boxSize, f
 
 
 __device__ __host__ 
-inline size_t Grid::linearIndex(const PCISPH::uVec3 &gridPos) const {
+size_t Grid::linearIndex(const PCISPH::uVec3 gridPos) const {
 	return gridPos.x + gridPos.y * gridSize.x + gridPos.z * gridSize.x * gridSize.y;
 }
 
 __device__ __host__ 
-inline size_t Grid::linearIndex(const PCISPH::Vec3 &pos) const {
+size_t Grid::linearIndex(const PCISPH::Vec3 pos) const {
 	return linearIndex(getGridPos(pos));
 }
 

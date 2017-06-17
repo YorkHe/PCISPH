@@ -25,7 +25,7 @@ private:
 
 	const float gridSize = 0.0002f;
 
-	HostParticleSet* mParticleSet;
+	HostParticleSet mParticleSet;
 	Window *window;
 	const Scene *scene;
 	Camera camera;

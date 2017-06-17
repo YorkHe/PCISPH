@@ -2,11 +2,12 @@
 
 #include "DeviceParticleSet.h"
 #include "Scene.h"
-#include "Types.h"
 #include "Kernel.h"
 #include "Grid.h"
-#include <vector>
+#include "Types.h"
 #include "DeviceParticleSetPointer.h"
+
+#include <vector>
 
 class Simulator
 {
