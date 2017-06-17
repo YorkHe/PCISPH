@@ -4,9 +4,17 @@
 
 class Kernel {
 public:
+	__host__ __device__
 	Kernel():h(0), H(this->h) {}
+	__host__ __device__
 	~Kernel() {}
 
+	__host__ __device__
+	void operator = (const Kernel& k) {
+		this->init(k.H);
+	}
+
+	__host__ __device__
 	inline void init(const float h) {
 		this->h = h;
 		this->h2 = h * h;
@@ -32,6 +40,7 @@ public:
 	*/
 
 	// Poly6 kernel is used to interpolate density
+	__host__ __device__
 	inline float poly6Kernel(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
@@ -42,6 +51,7 @@ public:
 			return 0;
 		}
 	}
+	__host__ __device__
 	inline PCISPH::Vec3 poly6KernelGradient(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
@@ -52,6 +62,7 @@ public:
 			return PCISPH::Vec3(0, 0, 0);
 		}
 	}
+	__host__ __device__
 	inline float poly6KernelLaplacian(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
@@ -65,6 +76,7 @@ public:
 
 	// Spiky kernel is used to interpolate pressure
 	//inline float spikyKernel(const PCISPH::Vec3 &r);
+	__host__ __device__
 	inline PCISPH::Vec3 spikyKernelGradient(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
@@ -78,6 +90,7 @@ public:
 
 	// viscosity kernel
 	//inline float viscosityKernel(const PCISPH::Vec3 &r);
+	__host__ __device__
 	inline float viscosityKernelLaplacian(const PCISPH::Vec3 &r) {
 		float rNorm = this->normalize(r);
 		if (rNorm <= this->h) {
@@ -89,6 +102,7 @@ public:
 	}
 
 	// cohesion kernel
+	__host__ __device__
 	inline float cohesionKernel(const float r) {
 		if (2 * r > this->h && r <= h) {
 			float t = this->h - r;
@@ -125,7 +139,9 @@ private:
 
 	float cohesionFactor;
 
+	__host__ __device__
 	void initFactors();
+	__host__ __device__
 	inline float normalize(const PCISPH::Vec3 &r) {
 		return sqrt(r.x * r.x + r.y * r.y + r.z * r.z);
 	}

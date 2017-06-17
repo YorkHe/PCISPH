@@ -83,7 +83,7 @@ void Renderer::initSceneVAO() {
 	glDeleteBuffers(1, &EBO);
 }
 
-void Renderer::updateParticleVAO(const std::vector<PCISPH::Vec3> &points) {
+void Renderer::updateParticleVAO(const thrust::host_vector<PCISPH::Vec3> &points) {
 
 	glGenVertexArrays(1, &(this->particleVAO));
 
@@ -114,7 +114,7 @@ void Renderer::updateMeshVAO()
 	glEnableVertexAttribArray(0);
 	glBindVertexArray(0);
 }
-void Renderer::draw(const ParticleSet& particleSet)
+void Renderer::draw(DeviceParticleSet* particleSet)
 {
 	glm::mat4 model;
 	model = glm::translate(model, glm::vec3(-0.25f, -0.25f, -0.25f));
@@ -122,7 +122,7 @@ void Renderer::draw(const ParticleSet& particleSet)
 
 	mvp = camera.getProjViewMatrix() * model;
 
-	mParticleSet = &particleSet;
+	mParticleSet->update(particleSet);
 	//marchingCube->updateParticles(&particleSet);
 	drawScene();
 

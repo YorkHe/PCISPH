@@ -4,7 +4,7 @@
 #include <iostream>
 #include <thrust/detail/config/host_device.h>
 
-Grid::Grid() :cellSize(), offset() {
+Grid::Grid() :cellSize() {
 
 }
 
@@ -23,10 +23,9 @@ void Grid::init(const PCISPH::Vec3 boxSize, float cellSize) {
 	);
 	cellNumber = gridSize.x * gridSize.y * gridSize.z;
 
-	offset.resize(cellNumber + 1);
 }
 
-void Grid::update(const std::vector<PCISPH::Vec3> &positions, std::function<void(size_t, size_t)> swap) {
+void Grid::update(const thrust::host_vector<PCISPH::Vec3> &positions, thrust::host_vector<size_t> offset, std::function<void(size_t, size_t)> swap) {
 	// particle count in each grid cell
 	std::vector<size_t> cellCount(cellNumber, 0);
 	// pointer to particle array index
@@ -59,30 +58,6 @@ void Grid::update(const std::vector<PCISPH::Vec3> &positions, std::function<void
 	}
 }
 
-/* Query the neighbor points
-* Then do func(i, j)
-* Expect Func format:
-* void Func(size_t j);
-*/
-//template<typename Func>
-__device__
-void Grid::query(const PCISPH::Vec3 &pos, std::function<void(size_t)> func) const {
-	glm::u64vec3 boundBoxMin = this->getGridPos(pos - PCISPH::Vec3(this->cellSize));
-	glm::u64vec3 boundBoxMax = this->getGridPos(pos + PCISPH::Vec3(this->cellSize));
-
-	for (int z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
-		for (int y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
-			for (int x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
-				size_t cellIndex = linearIndex(PCISPH::uVec3(x, y, z));
-				for (size_t neighborIndex = offset[cellIndex]; neighborIndex < offset[cellIndex + 1]; neighborIndex++) {
-					func(neighborIndex);
-				}
-			}
-		}
-	}
-}
-
-
 inline PCISPH::uVec3 Grid::getGridPos(const PCISPH::Vec3 &pos) const {
 	PCISPH::Vec3 p(pos);
 	if (PCISPH::minComponent(p) < 0) {
@@ -98,10 +73,36 @@ inline PCISPH::uVec3 Grid::getGridPos(const PCISPH::Vec3 &pos) const {
 	);
 }
 
+__device__ __host__ 
+inline PCISPH::uVec3 getGridPos(const PCISPH::Vec3 &pos, PCISPH::Vec3 boxSize, float cellSize) {
+	PCISPH::Vec3 p(pos);
+	if (PCISPH::minComponent(p) < 0) {
+		p = PCISPH::Vec3(0);
+	}
+	if (PCISPH::maxComponent(p - boxSize) > 0) {
+		p = boxSize;
+	}
+	return PCISPH::uVec3(
+		(PCISPH::uint)floor(p.x / cellSize),
+		(PCISPH::uint)floor(p.y / cellSize),
+		(PCISPH::uint)floor(p.z / cellSize)
+	);
+}
+
+
+__device__ __host__ 
 inline size_t Grid::linearIndex(const PCISPH::uVec3 &gridPos) const {
 	return gridPos.x + gridPos.y * gridSize.x + gridPos.z * gridSize.x * gridSize.y;
 }
 
+__device__ __host__ 
 inline size_t Grid::linearIndex(const PCISPH::Vec3 &pos) const {
 	return linearIndex(getGridPos(pos));
 }
+
+/* Query the neighbor points
+* Then do func(i, j)
+* Expect Func format:
+* void Func(size_t j);
+*/
+//template<typename Func>

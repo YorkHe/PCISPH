@@ -6,8 +6,8 @@
 class Camera
 {
 public:
-	Camera();
-	~Camera();
+	Camera(){};
+	~Camera(){};
 
 	PCISPH::Vec3 Position = PCISPH::Vec3(0.15f, 0.20f, 0.70f); // test value
 	PCISPH::Vec3 Front = PCISPH::Vec3(-0.5f, -0.5f, -1.0f);

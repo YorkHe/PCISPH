@@ -1,6 +1,6 @@
 #include "MarchingCube.h"
 
-MarchingCube::MarchingCube(const Scene* scene, const ParticleSet* particle)
+MarchingCube::MarchingCube(const Scene* scene, const HostParticleSet* particle)
 {
 	mScene = scene;
 	mParticleSet = particle;
@@ -81,7 +81,7 @@ PCISPH::Vec3 MarchingCube::vertexInterpolation(double isolevel, PCISPH::Vertex* 
 	return p;
 }
 
-void MarchingCube::updateParticles(const ParticleSet* particle)
+void MarchingCube::updateParticles(const HostParticleSet* particle)
 {
 	mParticleSet = particle;
 }

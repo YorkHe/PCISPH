@@ -1,5 +1,8 @@
 #pragma once
+#define GLM_FORCE_CUDA
+#include <cuda.h>
 #include <glm/glm.hpp>
+#include <glm/detail/precision.hpp>
 
 namespace PCISPH
 {

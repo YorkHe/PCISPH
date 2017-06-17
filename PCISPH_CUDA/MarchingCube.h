@@ -2,8 +2,10 @@
 #include <vector>
 #include "Types.h"
 #include "Scene.h"
-#include "ParticleSet.h"
+#include "DeviceParticleSet.h"
 #include "Kernel.h"
+
+#include "HostParticleSet.h"
 
 
 class MarchingCube
@@ -11,8 +13,8 @@ class MarchingCube
 
 public:
 
-	MarchingCube(const Scene *scene, const ParticleSet* particle);
-	void updateParticles(const ParticleSet* particle);
+	MarchingCube(const Scene *scene, const HostParticleSet* particle);
+	void updateParticles(const HostParticleSet* particle);
 	int Polygonise(PCISPH::Grid grid);
 	PCISPH::Vec3 vertexInterpolation(double isolevel, PCISPH::Vertex* p1, PCISPH::Vertex* p2);
 
@@ -26,10 +28,10 @@ public:
 	int triCount;
 
 private:
-	const float gridSize = 0.001;
+	const float gridSize = 0.001f;
 	const double isoLevel = 480;
 	const Scene* mScene;
-	const ParticleSet *mParticleSet;
+	const HostParticleSet* mParticleSet;
 	std::vector<PCISPH::Vertex*> mGridVertices;
 	std::vector<PCISPH::Grid*> mGrids;
 

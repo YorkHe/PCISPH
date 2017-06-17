@@ -28,6 +28,7 @@
       <Filter>config</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -45,16 +46,18 @@
     <ClInclude Include="Shader.h">
       <Filter>include\Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Grid.h">
+    <ClInclude Include="utils.h" />
+    <ClInclude Include="HostParticleSet.h" />
+    <ClInclude Include="DeviceParticleSet.h">
+      <Filter>include\Simulator</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulator.h">
       <Filter>include\Simulator</Filter>
     </ClInclude>
     <ClInclude Include="Kernel.h">
       <Filter>include\Simulator</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleSet.h">
-      <Filter>include\Simulator</Filter>
-    </ClInclude>
-    <ClInclude Include="Simulator.h">
+    <ClInclude Include="Grid.h">
       <Filter>include\Simulator</Filter>
     </ClInclude>
     <ClInclude Include="Scene.h">
@@ -63,16 +66,24 @@
     <ClInclude Include="System.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="Types.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="Window.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="utils.h" />
+    <ClInclude Include="Types.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp">
+    <ClCompile Include="Scene.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Window.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>source\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
       <Filter>source\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="MarchingCube.cpp">
@@ -81,32 +92,28 @@
     <ClCompile Include="OctTree.cpp">
       <Filter>source\Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer.cpp">
-      <Filter>source\Renderer</Filter>
+    <ClCompile Include="DeviceParticleSetPointer.h">
+      <Filter>include\Simulator</Filter>
     </ClCompile>
-    <ClCompile Include="Shader.cpp">
-      <Filter>source\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="Grid.cpp">
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="Simulator.cu">
       <Filter>source\Simulator</Filter>
-    </ClCompile>
-    <ClCompile Include="ParticleSet.cpp">
+    </CudaCompile>
+    <CudaCompile Include="Grid.cu">
       <Filter>source\Simulator</Filter>
-    </ClCompile>
-    <ClCompile Include="Simulator.cpp">
+    </CudaCompile>
+    <CudaCompile Include="DeviceParticleSet.cu">
       <Filter>source\Simulator</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
+    </CudaCompile>
+    <CudaCompile Include="HostParticleSet.cu">
+      <Filter>source\Simulator</Filter>
+    </CudaCompile>
+    <CudaCompile Include="main.cu">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene.cpp">
+    </CudaCompile>
+    <CudaCompile Include="System.cu">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="System.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="Window.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
+    </CudaCompile>
   </ItemGroup>
 </Project>

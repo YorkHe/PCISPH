@@ -6,7 +6,8 @@
 #include "Types.h"
 #include "MarchingCube.h"
 #include "Camera.h"
-#include "ParticleSet.h"
+#include "DeviceParticleSet.h"
+#include "HostParticleSet.h"
 
 class Renderer
 {
@@ -16,15 +17,15 @@ public:
 
 	void init(Window *window, const Scene *scene);
 
-	void draw(const ParticleSet &particleSet);
+	void draw(DeviceParticleSet* particleSet);
 
 	double lastTime;
 	int frames = 0;
 private:
 
-	const float gridSize = 0.0002;
+	const float gridSize = 0.0002f;
 
-	const ParticleSet* mParticleSet;
+	HostParticleSet* mParticleSet;
 	Window *window;
 	const Scene *scene;
 	Camera camera;
@@ -40,7 +41,7 @@ private:
 	GLuint particleVAO;
 	GLuint meshVAO;
 	void initSceneVAO();
-	void updateParticleVAO(const std::vector<PCISPH::Vec3> &points);
+	void updateParticleVAO(const thrust::host_vector<PCISPH::Vec3> &points);
 	void updateMeshVAO();
 
 	void drawScene();

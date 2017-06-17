@@ -1,17 +1,17 @@
-#include "ParticleSet.h"
+#include "DeviceParticleSet.h"
 
 
 
-ParticleSet::ParticleSet()
+DeviceParticleSet::DeviceParticleSet()
 {
 }
 
 
-ParticleSet::~ParticleSet()
+DeviceParticleSet::~DeviceParticleSet()
 {
 }
 
-void ParticleSet::init(const float particleMass) {
+void DeviceParticleSet::init(const float particleMass) {
 	this->count = 0;
 
 	this->particleMass = particleMass;
@@ -32,7 +32,7 @@ void ParticleSet::init(const float particleMass) {
 	this->maxDensityErr = 0.f;
 }
 
-void ParticleSet::addParticle(
+void DeviceParticleSet::addParticle(
 	const PCISPH::Vec3 &p,
 	const PCISPH::Vec3 &v
 ) {

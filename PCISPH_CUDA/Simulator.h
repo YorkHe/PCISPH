@@ -1,11 +1,12 @@
 #pragma once
 
-#include "ParticleSet.h"
+#include "DeviceParticleSet.h"
 #include "Scene.h"
 #include "Types.h"
 #include "Kernel.h"
 #include "Grid.h"
 #include <vector>
+#include "DeviceParticleSetPointer.h"
 
 class Simulator
 {
@@ -17,15 +18,21 @@ public:
 
 	void update(const size_t maxIterations = 100);
 
-	const ParticleSet& getParticleSet() const { return this->particleSet; }
+	DeviceParticleSet getParticleSet() const { return this->particleSet; }
 
 private:
 
-	ParticleSet particleSet;
+	DeviceParticleSet particleSet;
+	thrust::device_ptr<DeviceParticleSetPointer> particleSetPointer;
 	Grid fluidGrid;
+	thrust::device_ptr<Grid> d_fluidGrid;
 	Grid boundaryGrid;
 	const Scene *scene;
 	Kernel kernel;
+	thrust::device_ptr<Kernel> d_kernel;
+
+	thrust::device_vector<size_t> offset;
+	thrust::host_vector<size_t> h_offset;
 
 	// Boundary particles
 	std::vector<float> boundaryMass;
@@ -37,23 +44,13 @@ private:
 
 	void initParticlesPositions();
 	void initDensityVarianceScale();
-	void initBoundaryMass();
 	void relax();
 
 	void updateFluidGrid();
-	void updateBoundaryGrid();
 
-	void computeDensity();
-	void computeNormal();
-	void computeForces();
 	void clearPressureAndPressureForce();
-	void predictVelocityAndPosition();
-	void updatePressure();
-	void updatePressureForce();
-	void updateVelocityAndPosition();
 
 	/*update scenes which are variable. For example, add particles to the system in a FLOW scene*/
 	void updateScene();
-	void handleCollision();
 };
 
