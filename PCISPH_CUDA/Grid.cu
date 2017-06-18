@@ -66,13 +66,17 @@ void Grid::update(const thrust::host_vector<PCISPH::Vec3>& positions, thrust::ho
 }
 
 PCISPH::uVec3 Grid::getGridPos(const PCISPH::Vec3 pos) const {
-	PCISPH::Vec3 p(pos);
-	if (PCISPH::minComponent(p) < 0) {
-		p = PCISPH::Vec3(0);
-	}
-	if (PCISPH::maxComponent(p - boxSize) > 0) {
-		p = boxSize;
-	}
+	PCISPH::Vec3 p = pos;
+
+	if (p.x < 0) p.x = 0;
+	if (p.y < 0) p.y = 0;
+	if (p.z < 0) p.z = 0;
+
+	if (p.x > boxSize.x) p.x = boxSize.x;
+	if (p.y > boxSize.y) p.y = boxSize.y;
+	if (p.z > boxSize.z) p.z = boxSize.z;
+
+
 	return PCISPH::uVec3(
 		(PCISPH::uint)floor(p.x / cellSize),
 		(PCISPH::uint)floor(p.y / cellSize),
@@ -82,13 +86,16 @@ PCISPH::uVec3 Grid::getGridPos(const PCISPH::Vec3 pos) const {
 
 __device__ __host__ 
 PCISPH::uVec3 getGridPos(const PCISPH::Vec3 &pos, PCISPH::Vec3 boxSize, float cellSize) {
-	PCISPH::Vec3 p(pos);
-	if (PCISPH::minComponent(p) < 0) {
-		p = PCISPH::Vec3(0);
-	}
-	if (PCISPH::maxComponent(p - boxSize) > 0) {
-		p = boxSize;
-	}
+	PCISPH::Vec3 p = pos;
+
+	if (p.x < 0) p.x = 0;
+	if (p.y < 0) p.y = 0;
+	if (p.z < 0) p.z = 0;
+
+	if (p.x > boxSize.x) p.x = boxSize.x;
+	if (p.y > boxSize.y) p.y = boxSize.y;
+	if (p.z > boxSize.z) p.z = boxSize.z;
+
 	return PCISPH::uVec3(
 		(PCISPH::uint)floor(p.x / cellSize),
 		(PCISPH::uint)floor(p.y / cellSize),
