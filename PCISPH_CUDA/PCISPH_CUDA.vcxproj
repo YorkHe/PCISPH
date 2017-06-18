@@ -189,7 +189,6 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <FileType>CppCode</FileType>
       <GPUDebugInfo Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GPUDebugInfo>
       <GenerateLineInfo Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GenerateLineInfo>
-      <CodeGeneration Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">compute_20,sm_20</CodeGeneration>
     </CudaCompile>
     <CudaCompile Include="HostParticleSet.cu">
       <FileType>CppCode</FileType>

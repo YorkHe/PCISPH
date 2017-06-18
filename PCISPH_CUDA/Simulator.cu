@@ -314,6 +314,7 @@ void updatePressureForce(Grid* grid, DeviceParticleSetPointer* particleSet, size
 	glm::u64vec3 boundBoxMin = grid->getGridPos(particleSet->position[i] - PCISPH::Vec3(grid->cellSize));
 	glm::u64vec3 boundBoxMax = grid->getGridPos(particleSet->position[i] + PCISPH::Vec3(grid->cellSize));
 
+
 	for (auto z = boundBoxMin.z; z <= boundBoxMax.z; z++) {
 		for (auto y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
 			for (auto x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
@@ -467,7 +468,7 @@ void Simulator::initDensityVarianceScale() {
 
 void Simulator::update(const size_t maxIterations) {
 
-	int threadsPerBlock = 256;
+	int threadsPerBlock = 512;
 	int numBlocks = (particleSet.count / threadsPerBlock) + 1;
 	float maxDensityErr = 0;
 

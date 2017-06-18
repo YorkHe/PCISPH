@@ -15,8 +15,8 @@ namespace PCISPH {
 	}
 
 	__host__ __device__
-	inline float length(const PCISPH::Vec3 v) {
-		return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+	inline float length(const PCISPH::Vec3& v) {
+		return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
 	}
 
 	inline std::string vec2String(const PCISPH::Vec3 v) {

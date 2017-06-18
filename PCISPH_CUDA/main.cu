@@ -2,7 +2,6 @@
 #include <windows.h>
 #include <iostream>
 #include <stdexcept>
-#include <cuda.h>
 
 
 #include "System.h"
