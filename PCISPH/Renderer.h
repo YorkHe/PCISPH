@@ -22,6 +22,8 @@ private:
 
 	const float gridSize = 0.0002;
 
+	double lastTime;
+	int frames;
 	const ParticleSet* mParticleSet;
 	Window *window;
 	const Scene *scene;
@@ -45,5 +47,6 @@ private:
 
 	void drawParticle();
 	void drawMesh();
+	void drawFps();
 };
 

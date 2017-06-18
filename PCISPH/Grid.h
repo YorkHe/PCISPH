@@ -16,7 +16,6 @@ public:
 	//template<typename Func>
 	void query(const PCISPH::Vec3 &pos, std::function<void(size_t)> func) const;
 
-private:
 	float cellSize;
 	PCISPH::Vec3 boxSize;
 	PCISPH::uVec3 gridSize;

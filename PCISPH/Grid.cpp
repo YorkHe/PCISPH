@@ -72,7 +72,8 @@ void Grid::query(const PCISPH::Vec3 &pos, std::function<void(size_t)> func) cons
 		for (size_t y = boundBoxMin.y; y <= boundBoxMax.y; y++) {
 			for (size_t x = boundBoxMin.x; x <= boundBoxMax.x; x++) {
 				size_t cellIndex = linearIndex(PCISPH::uVec3(x, y, z));
-				for (size_t neighborIndex = offset[cellIndex]; neighborIndex < offset[cellIndex + 1]; neighborIndex++) {
+				auto upper = offset[cellIndex + 1];
+				for (size_t neighborIndex = offset[cellIndex]; neighborIndex < upper; neighborIndex++) {
 					func(neighborIndex);
 				}
 			}
@@ -81,14 +82,23 @@ void Grid::query(const PCISPH::Vec3 &pos, std::function<void(size_t)> func) cons
 }
 
 
-inline PCISPH::uVec3 Grid::getGridPos(const PCISPH::Vec3 &pos) const {
-	PCISPH::Vec3 p(pos);
-	if (PCISPH::minComponent(p) < 0) {
-		p = PCISPH::Vec3(0);
-	}
-	if (PCISPH::maxComponent(p - boxSize) > 0) {
-		p = boxSize;
-	}
+PCISPH::uVec3 Grid::getGridPos(const PCISPH::Vec3 &pos) const {
+	PCISPH::Vec3 p = pos;
+
+	if (pos.x < 0)
+		p.x = 0;
+	if (pos.y < 0)
+		p.y = 0;
+	if (pos.z < 0)
+		p.z = 0;
+
+	if (pos.x > boxSize.x)
+		p.x = boxSize.x;
+	if (pos.y > boxSize.y)
+		p.y = boxSize.y;
+	if (pos.z > boxSize.z)
+		p.z = boxSize.z;
+
 	return PCISPH::uVec3(
 		(PCISPH::uint)floor(p.x / cellSize),
 		(PCISPH::uint)floor(p.y / cellSize),

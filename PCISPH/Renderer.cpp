@@ -2,6 +2,7 @@
 
 #include <gl/glew.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 
 Renderer::Renderer():window(nullptr), scene(nullptr), camera(), marchingCube(nullptr)
 {
@@ -19,6 +20,10 @@ void Renderer::init(Window *window, const Scene *scene) {
 	this->particleShader = Shader("shaders/particle.vert", "shaders/particle.frag");
 	this->sceneShader = Shader("shaders/scene.vert", "shaders/scene.frag");
 	this->marchingCube = new MarchingCube(scene, mParticleSet);
+
+
+	lastTime = glfwGetTime();
+	frames = 0;
 
 	// codes below are just for test
 	sceneVAO = -1;
@@ -122,8 +127,25 @@ void Renderer::draw(const ParticleSet& particleSet)
 	drawScene();
 
 	drawParticle();
+	drawFps();
 	//drawMesh();
 }
+
+void Renderer::drawFps()
+{
+	double currentTime = glfwGetTime();
+
+	if (currentTime - lastTime >= 1.0)
+	{
+		std::cout << "fps:" << double(frames) / (currentTime - lastTime) << std::endl;
+		frames = 0;
+		lastTime = currentTime;
+	}
+
+	frames++;
+
+}
+
 
 void Renderer::drawMesh()
 {
@@ -159,7 +181,7 @@ void Renderer::drawParticle() {
 	// The codes below are just for test
 	glm::mat4 model;
 	model = glm::translate(model, glm::vec3(-0.25f, -0.25f, -0.25f));
-	model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
+	model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	glm::mat4 mvp = camera.getProjViewMatrix() * model;
 

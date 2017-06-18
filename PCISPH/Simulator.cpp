@@ -56,7 +56,7 @@ void Simulator::update(const size_t maxIterations) {
 	computeDensity();
 	computeForces();
 	clearPressureAndPressureForce();
-	size_t iterations = 0;
+	int iterations = 0;
 	while (iterations < maxIterations) {
 		particleSet.maxDensityErr = 0.f;
 		predictVelocityAndPosition();
@@ -82,14 +82,14 @@ void Simulator::update(const size_t maxIterations) {
 }
 
 void Simulator::updateFluidGrid() {
-	this->fluidGrid.update(particleSet.position, [this](size_t i, size_t j) {
+	this->fluidGrid.update(particleSet.position, [this](int i, size_t j) {
 		std::swap(particleSet.position[i], particleSet.position[j]);
 		std::swap(particleSet.velocity[i], particleSet.velocity[j]);
 	});
 }
 
 void Simulator::updateBoundaryGrid() {
-	this->boundaryGrid.update(boundaryPosition, [this](size_t i, size_t j) {
+	this->boundaryGrid.update(boundaryPosition, [this](int i, size_t j) {
 		std::swap(boundaryPosition[i], boundaryPosition[j]);
 	});
 }
@@ -97,7 +97,7 @@ void Simulator::updateBoundaryGrid() {
 void Simulator::computeDensity() {
 
 	// compute boundary particles' densities
-	for (size_t i = 0; i < boundaryDensity.size(); i++) {
+	for (int i = 0; i < boundaryDensity.size(); i++) {
 		float fluidTerm = 0.0f;
 		float boundaryTerm = 0.0f;
 
@@ -118,7 +118,8 @@ void Simulator::computeDensity() {
 	}
 
 	// compute fluid particles' densities
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for
+	for (int i = 0; i < particleSet.count; i++) {
 		float fluidTerm = 0.0f;
 		float boundaryTerm = 0.0f;
 
@@ -141,7 +142,8 @@ void Simulator::computeDensity() {
 }
 
 void Simulator::computeNormal() {
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for
+	for (int i = 0; i < particleSet.count; i++) {
 		PCISPH::Vec3 normal(0.0f);
 		fluidGrid.query(particleSet.position[i], [this, i, &normal](size_t j) {
 			PCISPH::Vec3 r = particleSet.position[i] - particleSet.position[j];
@@ -157,22 +159,25 @@ void Simulator::computeNormal() {
 void Simulator::computeForces() {
 	computeNormal();
 	float squaredMass = particleSet.particleMass * particleSet.particleMass;
-	for (size_t i = 0; i < particleSet.count; i++) {
+	long counter = 0;
+#pragma omp parallel for
+	for (int i = 0; i < particleSet.count; i++) {
 		PCISPH::Vec3 viscosity(0.f);
 		PCISPH::Vec3 cohesion(0.f);
 		PCISPH::Vec3 curvature(0.f);
 
-		fluidGrid.query(particleSet.position[i], [this, i, &viscosity, &cohesion, &curvature](size_t j) {
-			PCISPH::Vec3 r = particleSet.position[i] - particleSet.position[j];
-			float rLen = PCISPH::length(r);
-			if (rLen > kernel.H || rLen < EPSILON) return;
-			
-			PCISPH::Vec3 vDiff = particleSet.velocity[i] - particleSet.velocity[j];
-			viscosity -= vDiff * kernel.viscosityKernelLaplacian(r) / particleSet.density[j];
-			
-			float Kij = 2.0f * scene->referenceDensity / (particleSet.density[i] + particleSet.density[j]);
-			cohesion += Kij * (r / rLen) * kernel.cohesionKernel(rLen);
-			curvature += Kij * (particleSet.normal[i] - particleSet.normal[j]);
+		fluidGrid.query(particleSet.position[i], [this, i, &viscosity, &cohesion, &curvature, &counter](size_t j) {
+			counter++;
+						PCISPH::Vec3 r = particleSet.position[i] - particleSet.position[j];
+						float rLen = PCISPH::length(r);
+						if (rLen > kernel.H || rLen < EPSILON) return;
+
+						PCISPH::Vec3 vDiff = particleSet.velocity[i] - particleSet.velocity[j];
+						viscosity -= vDiff * kernel.viscosityKernelLaplacian(r) / particleSet.density[j];
+
+						float Kij = 2.0f * scene->referenceDensity / (particleSet.density[i] + particleSet.density[j]);
+						cohesion += Kij * (r / rLen) * kernel.cohesionKernel(rLen);
+						curvature += Kij * (particleSet.normal[i] - particleSet.normal[j]);
 		});
 
 		viscosity *= scene->viscosityCoefficient * squaredMass / particleSet.density[i];
@@ -181,6 +186,7 @@ void Simulator::computeForces() {
 
 		particleSet.forces[i] = viscosity + cohesion + curvature + particleSet.particleMass * scene->gravity;
 	}
+		std::cout << "Counter:" << counter/ particleSet.count << std::endl;
 }
 
 void Simulator::clearPressureAndPressureForce() {
@@ -189,7 +195,8 @@ void Simulator::clearPressureAndPressureForce() {
 }
 
 void Simulator::predictVelocityAndPosition() {
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for
+	for (int i = 0; i < particleSet.count; i++) {
 		PCISPH::Vec3 acceleration = (particleSet.forces[i] + particleSet.pressureForce[i]) / particleSet.particleMass;
 		particleSet.predictVelocity[i] = particleSet.velocity[i] + scene->timeStep * acceleration;
 		particleSet.predictPosition[i] = particleSet.position[i] + particleSet.predictVelocity[i] * scene->timeStep;
@@ -198,7 +205,8 @@ void Simulator::predictVelocityAndPosition() {
 
 void Simulator::updatePressure() {
 
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for
+	for (int i = 0; i < particleSet.count; i++) {
 		float fDensity = 0.f;
 		fluidGrid.query(particleSet.position[i], [this, i, &fDensity](size_t j) {
 			PCISPH::Vec3 r = particleSet.predictPosition[i] - particleSet.predictPosition[j];
@@ -222,7 +230,8 @@ void Simulator::updatePressure() {
 }
 
 void Simulator::updatePressureForce() {
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for
+	for (int i = 0; i < particleSet.count; i++) {
 		PCISPH::Vec3 pressureForce(0.f);
 		fluidGrid.query(particleSet.position[i], [this, i, &pressureForce](size_t j) {
 			PCISPH::Vec3 r = particleSet.predictPosition[i] - particleSet.predictPosition[j];
@@ -246,7 +255,8 @@ void Simulator::updatePressureForce() {
 }
 
 void Simulator::updateVelocityAndPosition() {
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for
+	for (int i = 0; i < particleSet.count; i++) {
 		PCISPH::Vec3 acceleration = (particleSet.forces[i] + particleSet.pressureForce[i]) / particleSet.particleMass;
 		particleSet.velocity[i] += acceleration * scene->timeStep;
 		particleSet.position[i] += particleSet.velocity[i] * scene->timeStep;
@@ -265,13 +275,14 @@ void Simulator::relax() {
 }
 
 void Simulator::handleCollision() {
-	static auto collisionFunc = [&](size_t i, const PCISPH::Vec3 &n, const float d) {
+	static auto collisionFunc = [&](int i, const PCISPH::Vec3 &n, const float d) {
 		particleSet.position[i] += d * n;
 		particleSet.velocity[i] -= (1 + scene->restitution) * PCISPH::dot(particleSet.velocity[i], n) * n;
 	};
 
 	PCISPH::Vec3 box = scene->boxSize;
-	for (size_t i = 0; i < particleSet.count; i++) {
+#pragma omp parallel for
+	for (int i = 0; i < particleSet.count; i++) {
 		const auto &p = particleSet.position[i];
 		if (p.x < 0) {
 			collisionFunc(i, PCISPH::Vec3(1.f, 0.f, 0.f), -p.x);
@@ -399,7 +410,7 @@ void Simulator::initDensityVarianceScale() {
 }
 
 void Simulator::initBoundaryMass() {
-	for (size_t i = 0; i < boundaryMass.size(); i++) {
+	for (int i = 0; i < boundaryMass.size(); i++) {
 		float weight = 0.0f;
 		boundaryGrid.query(boundaryPosition[i], [this, i, &weight](size_t j) {
 			weight += kernel.poly6Kernel(boundaryPosition[i] - boundaryPosition[j]);
