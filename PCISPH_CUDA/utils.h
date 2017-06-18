@@ -4,10 +4,23 @@
 #include <algorithm>
 #include <string>
 
-#define max(a, b) ((a) > (b)) ? (a):(b)
-#define min(a, b) ((a) < (b)) ? (a):(b)
 
 namespace PCISPH {
+
+	template <typename T>
+	__host__ __device__
+	T max(const T a, const T b)
+	{
+		return (a > b) ? a : b;
+	}
+
+	template <typename T>
+	__host__ __device__
+	T min(const T a, const T b)
+	{
+		return (a < b) ? a : b;
+	}
+
 
 	__host__ __device__
 	inline float dot(const PCISPH::Vec3 v1, const PCISPH::Vec3 v2) {
@@ -17,6 +30,12 @@ namespace PCISPH {
 	__host__ __device__
 	inline float length(const PCISPH::Vec3& v) {
 		return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+	}
+
+	__host__ __device__
+	inline float square_length(const PCISPH::Vec3& v)
+	{
+		return v.x * v.x + v.y * v.y + v.z * v.z;
 	}
 
 	inline std::string vec2String(const PCISPH::Vec3 v) {

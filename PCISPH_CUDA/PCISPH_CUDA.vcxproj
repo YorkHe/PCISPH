@@ -95,6 +95,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
+      <GenerateLineInfo>true</GenerateLineInfo>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -150,6 +151,10 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
       <Optimization>O2</Optimization>
+      <Defines>
+      </Defines>
+      <GPUDebugInfo>true</GPUDebugInfo>
+      <GenerateLineInfo>true</GenerateLineInfo>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
