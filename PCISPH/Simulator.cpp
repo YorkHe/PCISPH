@@ -44,6 +44,7 @@ void Simulator::init(const Scene *scene) {
 	// Initialize density variance scale
 	this->initDensityVarianceScale();
 	std::cout << "densityVarianceScale = " << this->densityVarianceScale << std::endl;
+	std::cout << "Total = " << particleSet.count << std::endl;
 	
 	this->relax();
 
@@ -74,10 +75,12 @@ void Simulator::update(const size_t maxIterations) {
 	handleCollision();
 
 	static size_t count = 0;
+	/*
 	std::cout << "maxDensityErr = " << this->particleSet.maxDensityErr << std::endl;
 	std::cout << "iterations = " << iterations << std::endl;
 	std::cout << "count = " << count << std::endl;
 	std::cout << std::endl;
+	*/
 	count++;
 }
 
@@ -159,15 +162,15 @@ void Simulator::computeNormal() {
 void Simulator::computeForces() {
 	computeNormal();
 	float squaredMass = particleSet.particleMass * particleSet.particleMass;
-	long counter = 0;
+	long count = 0;
 #pragma omp parallel for
 	for (int i = 0; i < particleSet.count; i++) {
 		PCISPH::Vec3 viscosity(0.f);
 		PCISPH::Vec3 cohesion(0.f);
 		PCISPH::Vec3 curvature(0.f);
 
-		fluidGrid.query(particleSet.position[i], [this, i, &viscosity, &cohesion, &curvature, &counter](size_t j) {
-			counter++;
+		fluidGrid.query(particleSet.position[i], [this, i, &viscosity, &cohesion, &curvature, &count](size_t j) {
+			count++;
 						PCISPH::Vec3 r = particleSet.position[i] - particleSet.position[j];
 						float rLen = PCISPH::length(r);
 						if (rLen > kernel.H || rLen < EPSILON) return;
@@ -186,7 +189,7 @@ void Simulator::computeForces() {
 
 		particleSet.forces[i] = viscosity + cohesion + curvature + particleSet.particleMass * scene->gravity;
 	}
-		std::cout << "Counter:" << counter/ particleSet.count << std::endl;
+	std::cout << "Counter:" << count << std::endl;
 }
 
 void Simulator::clearPressureAndPressureForce() {
